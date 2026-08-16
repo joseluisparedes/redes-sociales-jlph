@@ -1,0 +1,142 @@
+{
+  "id": "carrusel-vibecoding-v2",
+  "title": "El Fenómeno del Vibecoding en las Empresas",
+  "category": "IA & INGENIERÍA 2026",
+  "format": "square",
+  "author": {
+    "name": "Ing. José Luis",
+    "handle": "@joseluis_tech",
+    "title": "Software Architecture & AI"
+  },
+  "slides": [
+    {
+      "type": "cover_hero",
+      "hookTag": "⚡ TENDENCIA VIRAL EN TECH",
+      "title": "El Fenómeno del <span class='highlight'>Vibecoding</span>",
+      "subtitle": "¿El fin del código tradicional o la mayor trampa de deuda técnica corporativa?",
+      "image": "hero.jpg",
+      "stats": [
+        {
+          "icon": "🚀",
+          "title": "10x Velocidad",
+          "desc": "Prototipos en horas"
+        },
+        {
+          "icon": "⚠️",
+          "title": "Riesgo Real",
+          "desc": "Deuda técnica oculta"
+        }
+      ]
+    },
+    {
+      "type": "split_contrast",
+      "heading": "¿Vibecoding vs Ingeniería Rigurosa?",
+      "subheading": "Dos mentalidades opuestas ante la creación de software:",
+      "left": {
+        "badge": "VIBECODING",
+        "icon": "🕹️",
+        "title": "Guiado por Intuición",
+        "items": [
+          "Prompting iterativo y fluido",
+          "Si compila y corre, va a producción",
+          "Foco 100% en la velocidad del MVP",
+          "Ideal para validar ideas de negocio"
+        ]
+      },
+      "right": {
+        "badge": "INGENIERÍA",
+        "icon": "🏗️",
+        "title": "Arquitectura & Rigor",
+        "items": [
+          "Diseño de patrones y esquemas de BD",
+          "Cobertura de testing y seguridad CI/CD",
+          "Tolerancia a fallos y alta concurrencia",
+          "Mantenibilidad del sistema a 5 años"
+        ]
+      }
+    },
+    {
+      "type": "impact_matrix",
+      "heading": "El Impacto Real en Empresas",
+      "subheading": "Métricas observadas en equipos que adoptan IA para programar:",
+      "rows": [
+        {
+          "type": "good",
+          "icon": "🚀",
+          "title": "Velocidad de Prototipado y Validación",
+          "desc": "Validación de nuevas funciones en días en lugar de trimestres.",
+          "stat": "10x Faster"
+        },
+        {
+          "type": "warn",
+          "icon": "⚡",
+          "title": "Productividad en Tareas Repetitivas",
+          "desc": "Generación de boilerplate, endpoints y scripts en minutos.",
+          "stat": "+55% Speed"
+        },
+        {
+          "type": "bad",
+          "icon": "💥",
+          "title": "Riesgo de Deuda Técnica Oculta",
+          "desc": "Código 'caja negra' que ningún humano del equipo puede auditar.",
+          "stat": "3x Tech Debt"
+        }
+      ]
+    },
+    {
+      "type": "process_pipeline",
+      "heading": "El Pipeline Híbrido Seguro",
+      "subheading": "Cómo implementarlo en empresas serias sin romper producción:",
+      "image": "pipeline.jpg",
+      "steps": [
+        {
+          "title": "1. Vibe & Exploración",
+          "desc": "La IA genera el prototipo rápido y la prueba de concepto."
+        },
+        {
+          "title": "2. Filtro de Arquitectura",
+          "desc": "El Ingeniero Senior audita esquemas, seguridad y tipos.",
+          "active": true
+        },
+        {
+          "title": "3. Hardening & Tests",
+          "desc": "Tests automáticos unitarios antes del despliegue final."
+        }
+      ]
+    },
+    {
+      "type": "golden_rules",
+      "heading": "3 Reglas de Oro para Líderes Tech",
+      "subheading": "Principios para liderar ingeniería en la era de la IA generativa:",
+      "rules": [
+        {
+          "icon": "🎯",
+          "title": "1. La IA escribe, el Arquitecto responde",
+          "desc": "Nunca envíes a producción código que no puedas explicar en un pizarrón."
+        },
+        {
+          "icon": "🛡️",
+          "title": "2. Cero 'Vibe' en el Core Crítico",
+          "desc": "Pasarelas de pago, autenticación y datos sensibles requieren diseño determinista."
+        },
+        {
+          "icon": "🧪",
+          "title": "3. Los Tests son tu escudo",
+          "desc": "A mayor volumen de código generado, más rigurosa debe ser tu suite de pruebas."
+        }
+      ]
+    },
+    {
+      "type": "summary_cta",
+      "heading": "El Futuro del Ingeniero de Sistemas",
+      "subheading": "La habilidad clave ya no es tipear sintaxis, sino orquestar arquitecturas:",
+      "image": "future.jpg",
+      "question": "¿Y en tu empresa?",
+      "questionDesc": "¿Ya están aprovechando el Vibecoding para acelerar o prefieren el desarrollo 100% manual?",
+      "cta": {
+        "primaryBtn": "Comentar mi opinión 💬",
+        "secondaryBtn": "Guardar este Post 🔖"
+      }
+    }
+  ]
+}

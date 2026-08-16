@@ -1,0 +1,155 @@
+{
+  "id": "carrusel-system-design-1m-rps",
+  "title": "Arquitectura de Software: Cómo Escalar a 1M RPS",
+  "category": "SYSTEM DESIGN & CLOUD",
+  "format": "carousel",
+  "author": {
+    "name": "Ing. José Luis",
+    "handle": "@joseluis_tech",
+    "title": "Software Architecture & Cloud Systems"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "hookTag": "⚡ CASO DE ESTUDIO DE ALTO RENDIMIENTO",
+      "title": "Cómo Diseñar Sistemas para <span class='highlight'>1M de Peticiones/seg</span>",
+      "subtitle": "El blueprint arquitectónico que usan Netflix y Uber para mantener latencias P99 sub-20ms bajo tráfico masivo.",
+      "features": [
+        {
+          "icon": "⚡",
+          "label": "P99 < 18ms",
+          "sublabel": "Baja Latencia"
+        },
+        {
+          "icon": "🛡️",
+          "label": "99.999% SLA",
+          "sublabel": "Cero Caídas"
+        },
+        {
+          "icon": "📈",
+          "label": "Escala Lineal",
+          "sublabel": "Costos Optimizados"
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "heading": "¿Por qué colapsa un sistema tradicional?",
+      "subheading": "La diferencia entre escalar verticalmente vs una arquitectura distribuida moderna.",
+      "left": {
+        "badge": "❌ Arquitectura Clásica",
+        "title": "Monolito Sincrónico",
+        "points": [
+          "Todas las peticiones golpean directamente a la base de datos principal.",
+          "Cuello de botella en el pool de conexiones (Thread Starvation).",
+          "Un fallo en un módulo tira el 100% de la plataforma.",
+          "Escalamiento vertical costoso y con techo de hardware limitado."
+        ]
+      },
+      "right": {
+        "badge": "✅ Arquitectura Moderna",
+        "title": "Event-Driven + Multi-Cache",
+        "points": [
+          "Edge Caching resuelve el 75% del tráfico antes de llegar al servidor.",
+          "Capa de Redis en memoria absorbe lecturas de alta concurrencia.",
+          "Procesamiento asíncrono desacoplado con colas Kafka/RabbitMQ.",
+          "Patrón CQRS: Base de datos de lectura separada de escritura."
+        ]
+      }
+    },
+    {
+      "type": "architecture",
+      "heading": "El Pipeline Distribuido Paso a Paso",
+      "subheading": "Flujo de vida de una petición desde el usuario hasta la persistencia.",
+      "steps": [
+        {
+          "step": "01",
+          "title": "Edge CDN & Anycast DNS",
+          "desc": "Terminación TLS, compresión Brotli y absorción de ataques DDoS en el borde.",
+          "tech": "Cloudflare / CloudFront",
+          "highlight": false
+        },
+        {
+          "step": "02",
+          "title": "API Gateway & Rate Limiting",
+          "desc": "Enrutamiento inteligente, autenticación JWT y control de flujo por usuario.",
+          "tech": "Envoy / Kong / AWS ALB",
+          "highlight": true
+        },
+        {
+          "step": "03",
+          "title": "Caché Distribuido Multi-AZ",
+          "desc": "Consultas en memoria ultrarrápidas (< 2ms) con política Cache-Aside.",
+          "tech": "Redis Cluster / DragonFly",
+          "highlight": false
+        },
+        {
+          "step": "04",
+          "title": "Microservicios & Read Replicas (CQRS)",
+          "desc": "Escrituras a Postgres primario; lecturas distribuidas en réplicas con réplica WAL.",
+          "tech": "PostgreSQL + Kafka",
+          "highlight": false
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "heading": "Patrón Crítico: Rate Limiter con Redis",
+      "subheading": "Implementación del algoritmo Token Bucket para proteger tus microservicios.",
+      "filename": "rateLimiter.service.ts",
+      "language": "TYPESCRIPT",
+      "codeHtml": "<span class='kw'>async function</span> <span class='fn'>checkRateLimit</span>(userId: <span class='type'>string</span>, limit = <span class='num'>100</span>): <span class='type'>Promise&lt;boolean&gt;</span> {\n  <span class='kw'>const</span> key = <span class='str'>`rate_limit:${userId}`</span>;\n  <span class='kw'>const</span> current = <span class='kw'>await</span> redis.<span class='fn'>incr</span>(key);\n  \n  <span class='kw'>if</span> (current === <span class='num'>1</span>) {\n    <span class='comment'>// Expira en 60 segundos (Ventana deslizante)</span>\n    <span class='kw'>await</span> redis.<span class='fn'>expire</span>(key, <span class='num'>60</span>);\n  }\n  \n  <span class='kw'>return</span> current &lt;= limit; <span class='comment'>// Retorna 429 Too Many Requests si excede</span>\n}",
+      "callout": {
+        "title": "Regla de Oro en Producción",
+        "desc": "Nunca expongas un endpoint sin protección de Rate Limiting. Es la primera línea de defensa contra scraping agresivo y saturación de memoria."
+      }
+    },
+    {
+      "type": "metrics",
+      "heading": "Impacto y Benchmarks Reales",
+      "subheading": "Métricas registradas tras implementar la arquitectura desacoplada.",
+      "heroMetric": {
+        "value": "-78%",
+        "label": "Reducción en Tiempo de Respuesta P99",
+        "desc": "La latencia bajó de 240ms a solo 18ms estables bajo picos de carga pesada."
+      },
+      "metrics": [
+        {
+          "value": "10M+",
+          "label": "RPS Sostenidos",
+          "desc": "Sin pérdida de paquetes ni reintentos bloqueantes."
+        },
+        {
+          "value": "99.999%",
+          "label": "Disponibilidad",
+          "desc": "Tolerancia activa a caídas de zonas de disponibilidad."
+        }
+      ]
+    },
+    {
+      "type": "summary_cta",
+      "heading": "3 Principios Clave para Todo Arquitecto",
+      "subheading": "Guarda este resumen para tu próximo diseño de sistemas o entrevista técnica:",
+      "takeaways": [
+        {
+          "title": "Caché en 3 capas distintas",
+          "desc": "Nunca consultes la base de datos si el dato no ha mutado. Resuelve en Edge o Redis."
+        },
+        {
+          "title": "Desacopla lecturas de escrituras",
+          "desc": "El 90% del tráfico web son lecturas; aíslalas con réplicas dedicadas (CQRS)."
+        },
+        {
+          "title": "Falla rápido y con elegancia",
+          "desc": "Implementa Circuit Breakers y Rate Limiting para evitar caídas en cascada."
+        }
+      ],
+      "cta": {
+        "title": "Ing. José Luis | Tech Insights",
+        "subtitle": "Comparto análisis profundos de Arquitectura de Software, Cloud e Inteligencia Artificial.",
+        "primaryBtn": "Seguir ➔",
+        "secondaryBtn": "Guardar Post 🔖"
+      }
+    }
+  ]
+}

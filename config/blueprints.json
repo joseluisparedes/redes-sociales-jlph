@@ -1,0 +1,51 @@
+{
+  "blueprints": {
+    "standard_executive": {
+      "name": "Estándar Ejecutivo (6 Slides)",
+      "description": "Fórmula balanceada de alta retención para temas técnicos modernos.",
+      "slides": [
+        { "slide": 1, "type": "cover_hero", "purpose": "Gancho, título impactante, badges y arte 3D" },
+        { "slide": 2, "type": "split_contrast", "purpose": "El Problema / Comparativa (Antiguo vs Moderno)" },
+        { "slide": 3, "type": "impact_matrix", "purpose": "Métricas y datos clave en la industria" },
+        { "slide": 4, "type": "process_pipeline", "purpose": "Mapa conceptual / Arquitectura paso a paso con 3D" },
+        { "slide": 5, "type": "golden_rules", "purpose": "3 Reglas de oro o mejores prácticas" },
+        { "slide": 6, "type": "summary_cta", "purpose": "Pregunta de debate y llamada a la acción con 3D" }
+      ]
+    },
+    "historical_tech_story": {
+      "name": "Historia & Evolución Tecnológica (5 Slides)",
+      "description": "Ideal para contar el origen, crisis y auge de un lenguaje, framework o empresa.",
+      "slides": [
+        { "slide": 1, "type": "cover_hero", "purpose": "El Origen / La chispa que inició todo" },
+        { "slide": 2, "type": "impact_matrix", "purpose": "Datos históricos / La crisis del modelo anterior" },
+        { "slide": 3, "type": "process_pipeline", "purpose": "El punto de inflexión / Cómo cambió la industria" },
+        { "slide": 4, "type": "golden_rules", "purpose": "Lecciones aprendidas para el presente" },
+        { "slide": 5, "type": "summary_cta", "purpose": "Pregunta reflexiva y debate en comentarios" }
+      ]
+    },
+    "deep_dive_architecture": {
+      "name": "Deep Dive Técnico (8 Slides)",
+      "description": "Desglose exhaustivo para temas complejos de arquitectura y escalabilidad.",
+      "slides": [
+        { "slide": 1, "type": "cover_hero", "purpose": "El Caso de Estudio / Gancho de alto nivel" },
+        { "slide": 2, "type": "split_contrast", "purpose": "Por qué la solución común fracasa bajo carga" },
+        { "slide": 3, "type": "impact_matrix", "purpose": "Benchmarks y métricas de rendimiento (P99, SLA, RPS)" },
+        { "slide": 4, "type": "process_pipeline", "purpose": "Diagrama de arquitectura distribuida paso a paso" },
+        { "slide": 5, "type": "split_contrast", "purpose": "Trade-offs / Pros vs Contras de la decisión" },
+        { "slide": 6, "type": "process_pipeline", "purpose": "Estrategia de implementación y migración segura" },
+        { "slide": 7, "type": "golden_rules", "purpose": "3 Principios de diseño para producción" },
+        { "slide": 8, "type": "summary_cta", "purpose": "Resumen ejecutivo y CTA" }
+      ]
+    },
+    "quick_contrast": {
+      "name": "Comparativa Rápida (4 Slides)",
+      "description": "Formato ágil para comparativas directas (ej. Herramienta A vs Herramienta B).",
+      "slides": [
+        { "slide": 1, "type": "cover_hero", "purpose": "La batalla técnica / ¿Cuál elegir en 2026?" },
+        { "slide": 2, "type": "split_contrast", "purpose": "Matriz de comparación directa punto por punto" },
+        { "slide": 3, "type": "impact_matrix", "purpose": "Métricas de costo, latencia y curva de aprendizaje" },
+        { "slide": 4, "type": "summary_cta", "purpose": "Veredicto final según el caso de uso y CTA" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "author": {
+    "name": "Ing. José Luis",
+    "handle": "@joseluis_tech",
+    "title": "Software Architecture & AI",
+    "avatar": "default"
+  },
+  "defaults": {
+    "format": "square",
+    "category": "TECH & INGENIERÍA",
+    "theme": "dark_slate",
+    "slideCount": 6,
+    "blueprint": "standard_executive"
+  },
+  "formats": {
+    "square": { "width": 1080, "height": 1080, "label": "3:3 / 1:1 Feed (LinkedIn, IG, FB)" },
+    "portrait": { "width": 1080, "height": 1350, "label": "4:5 Vertical Feed" },
+    "story": { "width": 1080, "height": 1920, "label": "9:16 Stories (Instagram, FB, TikTok)" }
+  }
+}
