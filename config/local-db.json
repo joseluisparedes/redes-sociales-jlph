@@ -1,0 +1,45 @@
+{
+  "publications": [
+    {
+      "id": "carrusel-1786908631052",
+      "date": "2026-08-16",
+      "topic": "Arquitectura de Microservicios vs Monolito Modular",
+      "category": "IA & INGENIERÍA 2026",
+      "format": "square",
+      "slideCount": 6,
+      "blueprint": "standard_executive",
+      "status": "Generado",
+      "pdfPath": "/output/carrusel-1786908631052/carrusel-1786908631052_linkedin.pdf",
+      "folderPath": "output/carrusel-1786908631052",
+      "createdAt": "2026-08-16T19:30:50.636Z"
+    },
+    {
+      "id": "carrusel-1786907746114",
+      "date": "2026-08-16",
+      "topic": "LLMOps: Arquitectura RAG en Producción",
+      "category": "IA & INGENIERÍA 2026",
+      "format": "square",
+      "slideCount": 6,
+      "blueprint": "quick_contrast",
+      "status": "Generado",
+      "pdfPath": "/output/carrusel-1786907746114/carrusel-1786907746114_linkedin.pdf",
+      "folderPath": "output/carrusel-1786907746114",
+      "createdAt": "2026-08-16T19:16:06.502Z"
+    },
+    {
+      "id": "carrusel-vibecoding-v2",
+      "date": "2026-08-16",
+      "topic": "El Fenómeno del Vibecoding en las Empresas",
+      "category": "IA & INGENIERÍA 2026",
+      "format": "square",
+      "slideCount": 6,
+      "blueprint": "standard_executive",
+      "status": "Publicado",
+      "pdfPath": "/output/carrusel-vibecoding-v2/carrusel-vibecoding-v2_linkedin.pdf",
+      "folderPath": "output/carrusel-vibecoding-v2",
+      "createdAt": "2026-08-16T19:10:16.184Z",
+      "updatedAt": "2026-08-16T19:14:28.117Z"
+    }
+  ],
+  "googleSheetWebhookUrl": "https://script.google.com/macros/s/AKfycbx6-rRyvOAqc8ToAQvdyxO-YYg_lO_14-SgstdxXhCmXODNH7-0wubzSBXNq1v5-lql/exec"
+}

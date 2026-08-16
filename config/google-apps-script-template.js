@@ -2,18 +2,23 @@
  * ==============================================================================
  * GOOGLE APPS SCRIPT: BASE DE DATOS Y CONFIGURACIÓN PARA AUTOMATIZACIÓN TECH
  * ==============================================================================
- * Instrucciones:
- * 1. Crea una hoja de Google Sheets.
- * 2. Ve a Extensiones -> Apps Script.
- * 3. Pega este código completo reemplazando todo.
- * 4. Haz clic en "Implementar" -> "Nueva implementación" -> Tipo: "Aplicación web".
- * 5. Ejecutar como: "Yo", Quién tiene acceso: "Cualquiera" (Anyone).
- * 6. Copia la URL generada y pégala en el Panel de Control Web -> Pestaña Configuración.
+ * Si creas el script directamente desde script.google.com (Proyecto Independiente),
+ * coloca el ID de tu hoja de cálculo en la variable SHEET_ID_OPTIONAL.
+ * Si lo abres desde Extensiones -> Apps Script en la misma hoja, déjalo vacío ("").
  * ==============================================================================
  */
 
+const SHEET_ID_OPTIONAL = ""; // Opcional: Coloca el ID de tu hoja aquí si creas el script por fuera (ej: "1A2B3C...")
+
+function getSpreadsheet() {
+  if (SHEET_ID_OPTIONAL && SHEET_ID_OPTIONAL.trim() !== "") {
+    return SpreadsheetApp.openById(SHEET_ID_OPTIONAL);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
 function setupDatabase() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
 
   // Hoja 1: Publicaciones
   let pubSheet = ss.getSheetByName("Publicaciones");
@@ -47,8 +52,8 @@ function setupDatabase() {
 
 function doGet(e) {
   setupDatabase();
-  const action = e.parameter.action;
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const action = e.parameter ? e.parameter.action : "test";
+  const ss = getSpreadsheet();
 
   if (action === "getConfig") {
     const configSheet = ss.getSheetByName("Parametros_Config");
@@ -107,7 +112,7 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const action = body.action;
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet();
 
     if (action === "saveConfig") {
       const configSheet = ss.getSheetByName("Parametros_Config");
@@ -156,7 +161,7 @@ function doPost(e) {
       const data = pubSheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === body.id) {
-          pubSheet.getRange(i + 1, 8).setValue(body.status); // Columna Estado
+          pubSheet.getRange(i + 1, 8).setValue(body.status);
           break;
         }
       }
