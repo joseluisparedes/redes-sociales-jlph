@@ -2,6 +2,8 @@
 // GITHUB PAGES CLIENT-SIDE APPLICATION & BULLETPROOF GOOGLE SHEETS SYNC
 // ==============================================================================
 
+const DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec";
+
 let state = {
   token: localStorage.getItem('tech_token') || null,
   config: {
@@ -66,7 +68,7 @@ let state = {
     {
       id: "carrusel-1",
       date: new Date().toISOString().split('T')[0],
-      topic: "Cómo Diseñar un Rate Limiter con Redis",
+      topic: "El Fenómeno del Vibecoding en las Empresas",
       category: "IA & INGENIERÍA 2026",
       format: "square",
       slideCount: 6,
@@ -76,7 +78,7 @@ let state = {
     {
       id: "carrusel-2",
       date: new Date().toISOString().split('T')[0],
-      topic: "El Fenómeno del Vibecoding en las Empresas",
+      topic: "Cómo Diseñar un Rate Limiter con Redis",
       category: "IA & INGENIERÍA 2026",
       format: "square",
       slideCount: 6,
@@ -84,7 +86,7 @@ let state = {
       status: "Generado"
     }
   ],
-  googleSheetUrl: localStorage.getItem('tech_sheet_url') || "",
+  googleSheetUrl: localStorage.getItem('tech_sheet_url') || DEFAULT_SHEET_URL,
   generatedSlides: [],
   currentSlideIndex: 0
 };
@@ -178,7 +180,7 @@ async function loadData() {
   document.getElementById('cfg-author-name').value = state.config.author?.name || '';
   document.getElementById('cfg-author-handle').value = state.config.author?.handle || '';
   document.getElementById('cfg-author-title').value = state.config.author?.title || '';
-  document.getElementById('sheet-webhook-url').value = state.googleSheetUrl || '';
+  document.getElementById('sheet-webhook-url').value = state.googleSheetUrl || DEFAULT_SHEET_URL;
 
   const pill = document.getElementById('sheets-status-pill');
   const txt = document.getElementById('sheets-status-text');
@@ -198,11 +200,13 @@ async function loadData() {
 }
 
 /**
- * Envía un registro al Google Sheet de forma 100% libre de CORS
+ * Envía un registro al Google Sheet
  */
 function pushRecordToGoogleSheet(pubRecord) {
-  if (!state.googleSheetUrl) return;
-  const url = `${state.googleSheetUrl}?action=addPublication` +
+  const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
+  if (!targetUrl) return;
+
+  const fullUrl = `${targetUrl}?action=addPublication` +
     `&id=${encodeURIComponent(pubRecord.id)}` +
     `&topic=${encodeURIComponent(pubRecord.topic)}` +
     `&category=${encodeURIComponent(pubRecord.category)}` +
@@ -212,10 +216,10 @@ function pushRecordToGoogleSheet(pubRecord) {
     `&status=${encodeURIComponent(pubRecord.status)}` +
     `&date=${encodeURIComponent(pubRecord.date)}`;
 
-  // Usar imagen oculta o fetch con GET para evitar cualquier bloqueo de CORS o redirect
+  // Invocar silenciosamente
   const img = new Image();
-  img.src = url;
-  console.log('📡 Registro enviado a Google Sheets:', pubRecord.topic);
+  img.src = fullUrl;
+  console.log('📡 Publicación enviada a Google Sheet:', pubRecord.topic);
 }
 
 // ==============================================================================
@@ -648,7 +652,8 @@ function renderHistoryTable() {
 }
 
 document.getElementById('btn-refresh-history')?.addEventListener('click', () => {
-  if (state.publications.length > 0 && state.googleSheetUrl) {
+  const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
+  if (state.publications.length > 0 && targetUrl) {
     state.publications.forEach(p => pushRecordToGoogleSheet(p));
     alert(`📡 Sincronizando ${state.publications.length} publicaciones con tu Google Sheet...`);
   } else {
@@ -690,8 +695,9 @@ function initSettings() {
     loadData();
 
     // Enviar a Google Sheet si hay webhook
-    if (state.googleSheetUrl) {
-      const url = `${state.googleSheetUrl}?action=saveConfig&author_name=${encodeURIComponent(name)}&author_handle=${encodeURIComponent(handle)}&author_title=${encodeURIComponent(title)}`;
+    const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
+    if (targetUrl) {
+      const url = `${targetUrl}?action=saveConfig&author_name=${encodeURIComponent(name)}&author_handle=${encodeURIComponent(handle)}&author_title=${encodeURIComponent(title)}`;
       const img = new Image();
       img.src = url;
     }
