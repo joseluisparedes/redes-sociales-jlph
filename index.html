@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Content Engine | Panel Ejecutivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Librerías Client-Side para Renderizado en GitHub Pages (Sin requerir servidor) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+  <!-- ====================================================================
+       PANTALLA DE LOGIN
+       ==================================================================== -->
+  <div id="login-view" class="login-container">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h2>Tech Content Engine</h2>
+          <p>Automatización de Carruseles Ejecutivos</p>
+        </div>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Usuario</label>
+          <input type="text" id="login-user" value="admin" required placeholder="Ingresa tu usuario">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-pass" value="tech2026" required placeholder="••••••••">
+        </div>
+        <div id="login-error" class="error-msg"></div>
+        <button type="submit" class="btn-primary full-width">Iniciar Sesión ➔</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       APLICACIÓN PRINCIPAL (DASHBOARD)
+       ==================================================================== -->
+  <div id="app-view" class="app-layout" style="display: none;">
+    
+    <!-- Top Navbar -->
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">⚡</div>
+        <div class="nav-title">
+          <h1>Tech Content Engine</h1>
+          <span class="nav-badge">GitHub Pages Edition</span>
+        </div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="generator">🎨 Generador & Studio</button>
+        <button class="nav-tab" data-tab="history">📊 Base de Datos (Google Sheets)</button>
+        <button class="nav-tab" data-tab="settings">⚙️ Configuración & Parámetros</button>
+      </div>
+
+      <div class="nav-right">
+        <div id="sheets-status-pill" class="sheets-badge">
+          <span class="dot"></span>
+          <span id="sheets-status-text">Google Sheets</span>
+        </div>
+        <div class="user-profile-badge">
+          <span id="nav-author-name">Ing. José Luis</span>
+        </div>
+        <button id="btn-logout" class="btn-icon" title="Cerrar sesión">🚪</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+      
+      <!-- TAB 1: GENERADOR & BLUEPRINT STUDIO -->
+      <section id="tab-generator" class="tab-pane active">
+        <div class="dashboard-grid">
+          
+          <!-- Columna Izquierda: Formulario de Parámetros -->
+          <div class="panel-card config-panel">
+            <div class="panel-header">
+              <h3>⚙️ Parámetros de Generación</h3>
+              <span class="badge-accent">100% Parametrizable</span>
+            </div>
+
+            <form id="generate-form">
+              <div class="form-group">
+                <label>Tema o Noticia Tecnológica</label>
+                <textarea id="gen-topic" rows="2" placeholder="Ej. Cómo Escalar a 1M de Peticiones/seg con Redis y Kafka" required>El Fenómeno del Vibecoding en las Empresas</textarea>
+                <div class="quick-topics">
+                  <span class="topic-chip" data-topic="El Fenómeno del Vibecoding en las Empresas">🤖 Vibecoding</span>
+                  <span class="topic-chip" data-topic="Arquitectura de Microservicios vs Monolito Modular">🏗️ Microservicios</span>
+                  <span class="topic-chip" data-topic="Cómo Diseñar un Rate Limiter con Redis">⚡ Rate Limiter</span>
+                  <span class="topic-chip" data-topic="Por qué Linux adoptó Rust en el Kernel">🦀 Rust en Linux</span>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Categoría</label>
+                  <input type="text" id="gen-category" value="IA & INGENIERÍA 2026">
+                </div>
+                <div class="form-group">
+                  <label>Formato Visual</label>
+                  <select id="gen-format">
+                    <option value="square" selected>1:1 Cuadrado (LinkedIn, IG, FB)</option>
+                    <option value="story">9:16 Historia (Stories)</option>
+                    <option value="portrait">4:5 Vertical Feed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Blueprint Narrativo</label>
+                  <select id="gen-blueprint">
+                    <option value="standard_executive" selected>Estándar Ejecutivo (6 Slides)</option>
+                    <option value="historical_tech_story">Historia & Evolución (5 Slides)</option>
+                    <option value="deep_dive_architecture">Deep Dive Técnico (8 Slides)</option>
+                    <option value="quick_contrast">Comparativa Rápida (4 Slides)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Cantidad de Slides: <b id="slide-count-val">6</b></label>
+                  <input type="range" id="gen-slide-count" min="3" max="10" value="6" step="1">
+                </div>
+              </div>
+
+              <!-- Vista previa del esquema del guion -->
+              <div class="blueprint-summary-box">
+                <div class="bp-box-header">
+                  <span>Esquema del Guion Seleccionado:</span>
+                  <span id="bp-name-tag" class="tag-cyan">standard_executive</span>
+                </div>
+                <ul id="bp-slides-list" class="bp-slides-list">
+                  <!-- Se llena dinámicamente -->
+                </ul>
+              </div>
+
+              <button type="submit" id="btn-generate" class="btn-primary btn-hero full-width">
+                <span class="btn-icon-spin">⚡</span> Generar Carrusel en Tiempo Real
+              </button>
+            </form>
+          </div>
+
+          <!-- Columna Derecha: Visor de Diapositivas y Descargas -->
+          <div class="panel-card preview-panel">
+            <div class="panel-header">
+              <h3>🖼️ Visor de Diapositivas en Vivo</h3>
+              <div class="preview-actions" id="preview-actions" style="display: none;">
+                <button id="btn-download-pdf" class="btn-primary btn-sm">📄 Descargar PDF LinkedIn</button>
+                <button id="btn-download-png" class="btn-secondary btn-sm">🖼️ Descargar PNG</button>
+              </div>
+            </div>
+
+            <div id="preview-loading" class="preview-loading" style="display: none;">
+              <div class="spinner"></div>
+              <h4>Renderizando Diapositivas a 2X Retina...</h4>
+              <p>Generando gráficos vectoriales y sincronizando con Google Sheets</p>
+            </div>
+
+            <!-- Canvas donde se renderiza la diapositiva en vivo -->
+            <div id="preview-container" class="preview-canvas-wrap">
+              <div class="preview-empty-state">
+                <div class="empty-icon">🎨</div>
+                <h4>Ningún carrusel generado aún</h4>
+                <p>Haz clic en <b>"Generar Carrusel"</b> para renderizar las diapositivas interactivas.</p>
+              </div>
+            </div>
+
+            <!-- Copys de Redes Sociales -->
+            <div id="captions-container" class="captions-box" style="display: none;">
+              <div class="captions-header">
+                <h4>📝 Textos Listos para Publicar</h4>
+                <div class="caption-tabs">
+                  <button class="cap-tab active" data-cap="linkedin">LinkedIn</button>
+                  <button class="cap-tab" data-cap="instagram">Instagram / FB</button>
+                </div>
+              </div>
+              <div class="caption-body">
+                <textarea id="caption-text-area" readonly rows="6"></textarea>
+                <button id="btn-copy-caption" class="btn-secondary btn-sm">📋 Copiar Texto</button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 2: HISTORIAL Y BASE DE DATOS GOOGLE SHEETS -->
+      <section id="tab-history" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3>📊 Base de Datos de Publicaciones</h3>
+              <p class="panel-sub">Sincronizado en tiempo real con tu Google Sheet</p>
+            </div>
+            <button id="btn-refresh-history" class="btn-secondary btn-sm">🔄 Sincronizar Ahora</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tema</th>
+                  <th>Categoría</th>
+                  <th>Formato</th>
+                  <th>Slides</th>
+                  <th>Blueprint</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: CONFIGURACIÓN & INTEGRACIÓN GOOGLE SHEETS -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="settings-grid">
+          
+          <!-- Panel de Google Sheets -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>📊 Conexión con Google Sheets</h3>
+              <span class="badge-accent">Base de Datos</span>
+            </div>
+
+            <form id="sheets-form">
+              <div class="form-group">
+                <label>URL de la Web App de Google Apps Script</label>
+                <input type="url" id="sheet-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
+                <small class="help-text">Pega la URL de tu Google Apps Script desplegado como Web App.</small>
+              </div>
+
+              <button type="submit" class="btn-primary">Guardar y Probar Conexión con Google Sheet</button>
+            </form>
+
+            <div class="guide-box">
+              <h4>📋 Instrucciones de Conexión:</h4>
+              <ol>
+                <li>En tu Google Sheet, ve a <b>Extensiones ➔ Apps Script</b>.</li>
+                <li>Haz clic en <b>Implementar ➔ Nueva implementación ➔ Aplicación Web</b> (Acceso: "Cualquier usuario").</li>
+                <li>Copia la URL que termina en <code>/exec</code> y pégala arriba.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Panel de Marca Personal -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>👤 Parámetros de Marca Personal</h3>
+              <span class="badge-accent">Guardado en Google Sheets</span>
+            </div>
+
+            <form id="brand-form">
+              <div class="form-group">
+                <label>Nombre del Autor</label>
+                <input type="text" id="cfg-author-name" value="Ing. José Luis" required>
+              </div>
+              <div class="form-group">
+                <label>Usuario de Redes (@handle)</label>
+                <input type="text" id="cfg-author-handle" value="@joseluis_tech" required>
+              </div>
+              <div class="form-group">
+                <label>Especialidad / Título</label>
+                <input type="text" id="cfg-author-title" value="Software Architecture & AI" required>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Formato Predeterminado</label>
+                  <select id="cfg-default-format">
+                    <option value="square" selected>1:1 Cuadrado</option>
+                    <option value="portrait">4:5 Vertical</option>
+                    <option value="story">9:16 Historia</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Slides Predeterminadas</label>
+                  <input type="number" id="cfg-default-slides" value="6" min="3" max="10">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary">Guardar Parámetros en Google Sheets</button>
+            </form>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
