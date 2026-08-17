@@ -1,6 +1,6 @@
 // ==============================================================================
 // GITHUB PAGES CLIENT-SIDE APPLICATION & BULLETPROOF GOOGLE SHEETS SYNC
-// MULTIRED & MAKE.COM INTEGRATION
+// MULTIRED & MAKE.COM INTEGRATION (V2.0 UX EDITION)
 // ==============================================================================
 
 const DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec";
@@ -176,39 +176,31 @@ function initTabs() {
 }
 
 // ==============================================================================
-// MÓDULOS DE REDES SOCIALES Y PROPORCIONES
+// UX: SELECTOR INTERACTIVO DE REDES SOCIALES Y PROPORCIONES
 // ==============================================================================
 function initSocialAndDimensionPickers() {
-  // Redes Sociales
-  const socialCards = document.querySelectorAll('.social-card');
-  socialCards.forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      const chk = card.querySelector('input[type="checkbox"]');
-      chk.checked = !chk.checked;
-      card.classList.toggle('active', chk.checked);
-
-      // Actualizar array de redes seleccionadas
+  // Toggle de Redes Sociales
+  const socialBtns = document.querySelectorAll('.social-btn');
+  socialBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      
+      // Actualizar estado de redes
       state.selectedNetworks = [];
-      document.querySelectorAll('.social-card input[type="checkbox"]').forEach(c => {
-        if (c.checked) {
-          state.selectedNetworks.push(c.closest('.social-card').dataset.network);
-        }
+      document.querySelectorAll('.social-btn.active').forEach(b => {
+        state.selectedNetworks.push(b.dataset.network);
       });
     });
   });
 
-  // Dimensiones / Formatos
-  const dimCards = document.querySelectorAll('.dimension-card');
-  dimCards.forEach(card => {
+  // Selector de Formatos / Dimensiones
+  const formatCards = document.querySelectorAll('.format-card');
+  formatCards.forEach(card => {
     card.addEventListener('click', () => {
-      dimCards.forEach(c => c.classList.remove('active'));
+      formatCards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
-      const radio = card.querySelector('input[type="radio"]');
-      if (radio) {
-        radio.checked = true;
-        state.selectedFormat = radio.value;
-      }
+      state.selectedFormat = card.dataset.format;
+      
       if (state.generatedSlides.length > 0) {
         renderActiveSlide();
       }
@@ -250,13 +242,11 @@ async function loadData() {
 }
 
 /**
- * Envía un registro al Google Sheet
+ * Envía un registro al Google Sheet de forma 100% no bloqueante
  */
 function pushRecordToGoogleSheet(pubRecord) {
   const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
   if (!targetUrl) return;
-
-  const networksStr = Array.isArray(pubRecord.networks) ? pubRecord.networks.join(', ') : (pubRecord.networks || 'linkedin, instagram, facebook');
 
   const fullUrl = `${targetUrl}?action=addPublication` +
     `&id=${encodeURIComponent(pubRecord.id)}` +
@@ -268,7 +258,6 @@ function pushRecordToGoogleSheet(pubRecord) {
     `&status=${encodeURIComponent(pubRecord.status)}` +
     `&date=${encodeURIComponent(pubRecord.date)}`;
 
-  // Invocar silenciosamente
   const img = new Image();
   img.src = fullUrl;
   console.log('📡 Publicación enviada a Google Sheet:', pubRecord.topic);
@@ -355,7 +344,7 @@ function initGenerator() {
       if (state.makeWebhookUrl) {
         dispatchToMakeWebhook(pubRecord);
       }
-    }, 600);
+    }, 500);
   });
 
   // Copys tabs
@@ -375,9 +364,10 @@ function initGenerator() {
 
   document.getElementById('btn-download-pdf').addEventListener('click', downloadPdfClient);
   document.getElementById('btn-download-png').addEventListener('click', downloadPngClient);
+  
   document.getElementById('btn-send-make').addEventListener('click', () => {
     if (!state.makeWebhookUrl) {
-      alert('⚠️ Configura primero tu Webhook de Make.com en la pestaña "⚙️ Configuración, Make & Cron".');
+      alert('⚠️ Configura primero tu Webhook de Make.com en la pestaña "⚙️ Make.com & Configuración".');
       return;
     }
     const latest = state.publications[0];
@@ -513,11 +503,11 @@ function renderActiveSlide() {
     contentHtml = `
       <div>
         <div style="font-family: var(--font-mono); color: var(--amber); font-size: 13px; font-weight: 700; margin-bottom: 12px;">${slide.hook}</div>
-        <h2 style="font-size: 30px; font-weight: 900; line-height: 1.15; color: #FFF; margin-bottom: 12px;">${slide.title}</h2>
+        <h2 style="font-size: 28px; font-weight: 900; line-height: 1.15; color: #FFF; margin-bottom: 12px;">${slide.title}</h2>
         <p style="font-size: 14px; color: var(--text-muted); line-height: 1.4; margin-bottom: 18px;">${slide.subtitle}</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div style="background: rgba(6,182,212,0.1); border: 1px solid var(--cyan); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">⚡ ${slide.badge1}</div>
-          <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--emerald); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">🛡️ ${slide.badge2}</div>
+          <div style="background: rgba(6,182,212,0.1); border: 1px solid var(--cyan); padding: 10px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">⚡ ${slide.badge1}</div>
+          <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--emerald); padding: 10px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">🛡️ ${slide.badge2}</div>
         </div>
       </div>
     `;
@@ -528,14 +518,14 @@ function renderActiveSlide() {
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.4); padding: 12px; border-radius: 10px;">
-            <h4 style="color: var(--rose); font-size: 14px; margin-bottom: 6px;">❌ ${slide.badTitle}</h4>
-            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
+            <h4 style="color: var(--rose); font-size: 13px; margin-bottom: 6px;">❌ ${slide.badTitle}</h4>
+            <ul style="list-style: none; font-size: 11px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
               ${slide.badItems.map(i => `<li>• ${i}</li>`).join('')}
             </ul>
           </div>
           <div style="background: rgba(6,182,212,0.08); border: 1px solid var(--cyan); padding: 12px; border-radius: 10px;">
-            <h4 style="color: var(--cyan); font-size: 14px; margin-bottom: 6px;">✅ ${slide.goodTitle}</h4>
-            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
+            <h4 style="color: var(--cyan); font-size: 13px; margin-bottom: 6px;">✅ ${slide.goodTitle}</h4>
+            <ul style="list-style: none; font-size: 11px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
               ${slide.goodItems.map(i => `<li>✓ ${i}</li>`).join('')}
             </ul>
           </div>

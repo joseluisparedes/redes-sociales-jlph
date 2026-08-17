@@ -7,9 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.0">
   
-  <!-- Librerías Client-Side para Renderizado en GitHub Pages -->
+  <!-- Librerías Client-Side -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
@@ -53,14 +53,20 @@
         <div class="nav-logo">⚡</div>
         <div class="nav-title">
           <h1>Tech Content Engine</h1>
-          <span class="nav-badge">GitHub Pages Edition</span>
+          <span class="nav-badge">Executive Studio</span>
         </div>
       </div>
 
       <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="generator">🎨 Generador & Studio</button>
-        <button class="nav-tab" data-tab="history">📊 Base de Datos (Google Sheets)</button>
-        <button class="nav-tab" data-tab="settings">⚙️ Configuración, Make & Cron</button>
+        <button class="nav-tab active" data-tab="generator">
+          <span class="tab-icon">🎨</span> Generador & Studio
+        </button>
+        <button class="nav-tab" data-tab="history">
+          <span class="tab-icon">📊</span> Base de Datos (Google Sheets)
+        </button>
+        <button class="nav-tab" data-tab="settings">
+          <span class="tab-icon">⚙️</span> Make.com & Configuración
+        </button>
       </div>
 
       <div class="nav-right">
@@ -78,21 +84,30 @@
     <!-- Main Content Area -->
     <main class="main-container">
       
-      <!-- TAB 1: GENERADOR & BLUEPRINT STUDIO -->
+      <!-- TAB 1: GENERADOR & STUDIO -->
       <section id="tab-generator" class="tab-pane active">
         <div class="dashboard-grid">
           
           <!-- Columna Izquierda: Formulario de Parámetros -->
           <div class="panel-card config-panel">
             <div class="panel-header">
-              <h3>⚙️ Parámetros de Generación</h3>
-              <span class="badge-accent">Multired & Adaptativo</span>
+              <div>
+                <h3>⚙️ Estudio de Contenido Tech</h3>
+                <p class="panel-sub">Parametriza tu publicación multired en segundos</p>
+              </div>
+              <span class="badge-accent">100% Automático</span>
             </div>
 
             <form id="generate-form">
+              
+              <!-- 1. Tema -->
               <div class="form-group">
-                <label>Tema o Noticia Tecnológica</label>
-                <textarea id="gen-topic" rows="2" placeholder="Ej. Cómo Escalar a 1M de Peticiones/seg con Redis y Kafka" required>El Fenómeno del Vibecoding en las Empresas</textarea>
+                <div class="label-row">
+                  <label>Tema o Noticia Tecnológica</label>
+                  <span class="helper-badge">Gancho Principal</span>
+                </div>
+                <textarea id="gen-topic" rows="2" placeholder="Ej. Cómo Diseñar un Rate Limiter Distribuido con Redis" required>El Fenómeno del Vibecoding en las Empresas</textarea>
+                
                 <div class="quick-topics">
                   <span class="topic-chip" data-topic="El Fenómeno del Vibecoding en las Empresas">🤖 Vibecoding</span>
                   <span class="topic-chip" data-topic="Arquitectura de Microservicios vs Monolito Modular">🏗️ Microservicios</span>
@@ -101,88 +116,93 @@
                 </div>
               </div>
 
-              <!-- NUEVO MÓDULO 1: SELECCIÓN DE REDES SOCIALES DESTINO -->
+              <!-- 2. Redes Sociales Destino -->
               <div class="form-group">
-                <label>🌐 Redes Sociales de Destino</label>
-                <div class="social-networks-selector">
-                  <label class="social-card active" data-network="linkedin">
-                    <input type="checkbox" id="net-linkedin" checked>
-                    <div class="social-icon">💼</div>
-                    <div class="social-info">
+                <div class="label-row">
+                  <label>🌐 Redes Sociales de Destino</label>
+                  <span class="helper-sub">Selecciona una o más</span>
+                </div>
+                <div class="social-toggles-grid">
+                  <div class="social-btn active" data-network="linkedin">
+                    <span class="soc-icon">💼</span>
+                    <div class="soc-text">
                       <b>LinkedIn</b>
-                      <span>Documento PDF / Post</span>
+                      <span>Documento PDF</span>
                     </div>
-                  </label>
+                    <span class="soc-check">✓</span>
+                  </div>
 
-                  <label class="social-card active" data-network="instagram">
-                    <input type="checkbox" id="net-instagram" checked>
-                    <div class="social-icon">📸</div>
-                    <div class="social-info">
+                  <div class="social-btn active" data-network="instagram">
+                    <span class="soc-icon">📸</span>
+                    <div class="soc-text">
                       <b>Instagram</b>
-                      <span>Carrusel / Stories</span>
+                      <span>Carrusel Multi-foto</span>
                     </div>
-                  </label>
+                    <span class="soc-check">✓</span>
+                  </div>
 
-                  <label class="social-card active" data-network="facebook">
-                    <input type="checkbox" id="net-facebook" checked>
-                    <div class="social-icon">📘</div>
-                    <div class="social-info">
+                  <div class="social-btn active" data-network="facebook">
+                    <span class="soc-icon">📘</span>
+                    <div class="soc-text">
                       <b>Facebook</b>
-                      <span>Álbum Feed / Post</span>
+                      <span>Álbum Feed Post</span>
                     </div>
-                  </label>
+                    <span class="soc-check">✓</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- NUEVO MÓDULO 2: PROPORCIÓN Y TAMAÑO DE LA IMAGEN -->
+              <!-- 3. Formato y Proporciones -->
               <div class="form-group">
-                <label>📐 Proporción y Tamaño de Imagen</label>
-                <div class="dimension-selector">
-                  <label class="dimension-card active" data-format="square">
-                    <input type="radio" name="format_choice" value="square" checked>
-                    <div class="dim-box square-box">1:1</div>
-                    <div class="dim-label">
+                <div class="label-row">
+                  <label>📐 Proporción Visual del Carrusel</label>
+                  <span class="helper-sub">Dimensiones exactas</span>
+                </div>
+                <div class="format-cards-grid">
+                  
+                  <div class="format-card active" data-format="square">
+                    <div class="ratio-preview square-preview">1:1</div>
+                    <div class="format-info">
                       <b>3:3 / 1:1 Cuadrado</b>
-                      <span>1080 x 1080 px (Feed)</span>
+                      <span>1080 × 1080 px (Feed)</span>
                     </div>
-                  </label>
+                  </div>
 
-                  <label class="dimension-card" data-format="story">
-                    <input type="radio" name="format_choice" value="story">
-                    <div class="dim-box story-box">9:16</div>
-                    <div class="dim-label">
+                  <div class="format-card" data-format="story">
+                    <div class="ratio-preview story-preview">9:16</div>
+                    <div class="format-info">
                       <b>9:16 Vertical</b>
-                      <span>1080 x 1920 px (Stories)</span>
+                      <span>1080 × 1920 px (Stories)</span>
                     </div>
-                  </label>
+                  </div>
 
-                  <label class="dimension-card" data-format="landscape">
-                    <input type="radio" name="format_choice" value="landscape">
-                    <div class="dim-box landscape-box">16:9</div>
-                    <div class="dim-label">
+                  <div class="format-card" data-format="landscape">
+                    <div class="ratio-preview landscape-preview">16:9</div>
+                    <div class="format-info">
                       <b>16:9 Horizontal</b>
-                      <span>1920 x 1080 px (Banner/Desktop)</span>
+                      <span>1920 × 1080 px (Desktop)</span>
                     </div>
-                  </label>
+                  </div>
 
-                  <label class="dimension-card" data-format="portrait">
-                    <input type="radio" name="format_choice" value="portrait">
-                    <div class="dim-box portrait-box">4:5</div>
-                    <div class="dim-label">
-                      <b>4:5 Vertical Feed</b>
-                      <span>1080 x 1350 px (Móvil)</span>
+                  <div class="format-card" data-format="portrait">
+                    <div class="ratio-preview portrait-preview">4:5</div>
+                    <div class="format-info">
+                      <b>4:5 Vertical</b>
+                      <span>1080 × 1350 px (Móvil)</span>
                     </div>
-                  </label>
+                  </div>
+
                 </div>
               </div>
 
+              <!-- 4. Categoría & Blueprint -->
               <div class="form-row-2">
                 <div class="form-group">
                   <label>Categoría</label>
                   <input type="text" id="gen-category" value="IA & INGENIERÍA 2026">
                 </div>
                 <div class="form-group">
-                  <label>Blueprint Narrativo</label>
+                  <label>Estructura / Blueprint</label>
                   <select id="gen-blueprint">
                     <option value="standard_executive" selected>Estándar Ejecutivo (6 Slides)</option>
                     <option value="historical_tech_story">Historia & Evolución (5 Slides)</option>
@@ -192,24 +212,28 @@
                 </div>
               </div>
 
+              <!-- 5. Slider de Slides -->
               <div class="form-group">
-                <label>Cantidad de Slides: <b id="slide-count-val">6</b></label>
-                <input type="range" id="gen-slide-count" min="3" max="10" value="6" step="1">
+                <div class="slider-header">
+                  <label>Cantidad de Diapositivas</label>
+                  <span class="slider-badge"><b id="slide-count-val">6</b> Slides</span>
+                </div>
+                <input type="range" id="gen-slide-count" min="3" max="10" value="6" step="1" class="custom-slider">
               </div>
 
               <!-- Vista previa del esquema del guion -->
               <div class="blueprint-summary-box">
                 <div class="bp-box-header">
-                  <span>Esquema del Guion Seleccionado:</span>
+                  <span>Esquema Narrativo:</span>
                   <span id="bp-name-tag" class="tag-cyan">standard_executive</span>
                 </div>
                 <ul id="bp-slides-list" class="bp-slides-list">
-                  <!-- Se llena dinámicamente -->
+                  <!-- Dinámico -->
                 </ul>
               </div>
 
               <button type="submit" id="btn-generate" class="btn-primary btn-hero full-width">
-                <span class="btn-icon-spin">⚡</span> Generar Carrusel y Despachar
+                <span class="btn-icon-spin">⚡</span> Generar Carrusel & Despachar a Make
               </button>
             </form>
           </div>
@@ -217,9 +241,12 @@
           <!-- Columna Derecha: Visor de Diapositivas y Descargas -->
           <div class="panel-card preview-panel">
             <div class="panel-header">
-              <h3>🖼️ Visor de Diapositivas en Vivo</h3>
+              <div>
+                <h3>🖼️ Visor de Diapositivas en Vivo</h3>
+                <p class="panel-sub">Renderizado de alta resolución</p>
+              </div>
               <div class="preview-actions" id="preview-actions" style="display: none;">
-                <button id="btn-send-make" class="btn-accent btn-sm">⚡ Despachar a Make.com</button>
+                <button id="btn-send-make" class="btn-accent btn-sm">⚡ Despachar a Make</button>
                 <button id="btn-download-pdf" class="btn-primary btn-sm">📄 Descargar PDF</button>
                 <button id="btn-download-png" class="btn-secondary btn-sm">🖼️ PNG</button>
               </div>
@@ -234,16 +261,26 @@
             <!-- Canvas donde se renderiza la diapositiva en vivo -->
             <div id="preview-container" class="preview-canvas-wrap">
               <div class="preview-empty-state">
-                <div class="empty-icon">🎨</div>
+                <div class="empty-art">
+                  <div class="mock-card">
+                    <div class="mock-header"></div>
+                    <div class="mock-line-lg"></div>
+                    <div class="mock-line-sm"></div>
+                    <div class="mock-grid">
+                      <div class="mock-pill"></div>
+                      <div class="mock-pill"></div>
+                    </div>
+                  </div>
+                </div>
                 <h4>Ningún carrusel generado aún</h4>
-                <p>Haz clic en <b>"Generar Carrusel y Despachar"</b> para renderizar las diapositivas interactivas.</p>
+                <p>Haz clic en el botón <b>"Generar Carrusel"</b> para previsualizar tus láminas interactivas.</p>
               </div>
             </div>
 
             <!-- Copys de Redes Sociales -->
             <div id="captions-container" class="captions-box" style="display: none;">
               <div class="captions-header">
-                <h4>📝 Textos Listos para Publicar</h4>
+                <h4>📝 Copys Optimizados con Ganchos y Hashtags</h4>
                 <div class="caption-tabs">
                   <button class="cap-tab active" data-cap="linkedin">💼 LinkedIn</button>
                   <button class="cap-tab" data-cap="instagram">📸 Instagram</button>
@@ -251,8 +288,11 @@
                 </div>
               </div>
               <div class="caption-body">
-                <textarea id="caption-text-area" readonly rows="6"></textarea>
-                <button id="btn-copy-caption" class="btn-secondary btn-sm">📋 Copiar Texto</button>
+                <textarea id="caption-text-area" readonly rows="5"></textarea>
+                <div class="caption-footer-actions">
+                  <span class="char-counter">Listo para publicar</span>
+                  <button id="btn-copy-caption" class="btn-secondary btn-sm">📋 Copiar Texto</button>
+                </div>
               </div>
             </div>
 
@@ -301,15 +341,18 @@
           <!-- Panel de Make.com & Autopublicación -->
           <div class="panel-card">
             <div class="panel-header">
-              <h3>⚡ Integración Make.com (Integromat)</h3>
-              <span class="badge-accent">Autopublicador Multired</span>
+              <div>
+                <h3>⚡ Integración Make.com (Integromat)</h3>
+                <p class="panel-sub">Orquestador de publicación multired</p>
+              </div>
+              <span class="badge-accent">Make Webhook</span>
             </div>
 
             <form id="make-form">
               <div class="form-group">
                 <label>URL del Webhook de Make.com</label>
                 <input type="url" id="make-webhook-url" placeholder="https://hook.eu2.make.com/xxxxxxxxxxxxxxxxxxxx">
-                <small class="help-text">El webhook que recibe los datos y publica en LinkedIn, Instagram y Facebook.</small>
+                <small class="help-text">El webhook que recibe las imágenes y publica en LinkedIn, Instagram y Facebook.</small>
               </div>
 
               <button type="submit" class="btn-primary">Guardar Webhook de Make.com</button>
@@ -317,7 +360,7 @@
 
             <div class="guide-box">
               <h4>📦 Plantilla de Make.com Incluida:</h4>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
                 Descarga el blueprint desde tu repositorio en <code>integrations/make/make-scenario-blueprint.json</code> e impórtalo en tu cuenta de Make.
               </p>
               <a href="https://github.com/joseluisparedes/redes-sociales-jlph/tree/main/integrations/make" target="_blank" class="btn-secondary btn-sm">📖 Ver Guía Paso a Paso de Make</a>
@@ -327,8 +370,11 @@
           <!-- Panel de Programación Cron en GitHub Actions -->
           <div class="panel-card">
             <div class="panel-header">
-              <h3>⏰ Automatización GitHub Actions (Cron)</h3>
-              <span class="badge-accent">Desatendido 24/7</span>
+              <div>
+                <h3>⏰ Automatización GitHub Actions (Cron)</h3>
+                <p class="panel-sub">Publicación 100% desatendida en la nube</p>
+              </div>
+              <span class="badge-accent">Cron 24/7</span>
             </div>
 
             <div class="cron-status-box">
@@ -337,7 +383,7 @@
                 <b>Cron Activo en GitHub Actions</b>
               </div>
               <p style="font-size: 13px; color: var(--text-muted); margin: 8px 0 14px 0;">
-                Se ejecuta automáticamente <b>2 veces al día</b> (8:00 AM y 6:00 PM) para generar contenido y disparar el webhook de Make.
+                Se ejecuta automáticamente <b>2 veces al día</b> para generar contenido de alta escala y disparar el webhook de Make.com.
               </p>
               <div class="cron-schedule-badges">
                 <span class="time-badge">☀️ 08:00 AM (Mañana)</span>
@@ -347,8 +393,8 @@
 
             <div class="guide-box">
               <h4>🚀 Ejecución Manual en GitHub Actions:</h4>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-                Puedes disparar publicaciones en cualquier momento desde la pestaña <b>Actions</b> de tu repositorio de GitHub.
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                Puedes forzar una publicación en cualquier momento desde la pestaña <b>Actions</b> de tu repositorio de GitHub.
               </p>
               <a href="https://github.com/joseluisparedes/redes-sociales-jlph/actions" target="_blank" class="btn-secondary btn-sm">🐙 Ir a GitHub Actions</a>
             </div>
@@ -357,8 +403,11 @@
           <!-- Panel de Conexión Google Sheets -->
           <div class="panel-card">
             <div class="panel-header">
-              <h3>📊 Conexión Google Sheets</h3>
-              <span class="badge-accent">Base de Datos</span>
+              <div>
+                <h3>📊 Conexión Google Sheets</h3>
+                <p class="panel-sub">Base de datos de publicaciones</p>
+              </div>
+              <span class="badge-accent">Google Apps Script</span>
             </div>
 
             <form id="sheets-form">
@@ -373,8 +422,11 @@
           <!-- Panel de Marca Personal -->
           <div class="panel-card">
             <div class="panel-header">
-              <h3>👤 Parámetros de Marca Personal</h3>
-              <span class="badge-accent">Autor</span>
+              <div>
+                <h3>👤 Parámetros de Marca Personal</h3>
+                <p class="panel-sub">Firma de autor en las láminas</p>
+              </div>
+              <span class="badge-accent">Firma</span>
             </div>
 
             <form id="brand-form">
@@ -401,6 +453,6 @@
 
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 </html>
