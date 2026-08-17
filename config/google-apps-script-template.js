@@ -1,15 +1,19 @@
 /**
  * ==============================================================================
  * GOOGLE APPS SCRIPT: BASE DE DATOS Y CONFIGURACIÓN PARA AUTOMATIZACIÓN TECH
- * (VERSIÓN BULLETPROOF: SOPORTA GET Y POST SIN BLOQUEOS DE CORS)
  * ==============================================================================
  */
 
-const SHEET_ID_OPTIONAL = '13s9kJ-VRFhW_TsVjMitsFkfLaOcOpFDe7-Mbim2hW00'; // Tu ID de Google Sheet
+// Tu ID exacto de Google Sheet:
+const SHEET_ID_OPTIONAL = "13s0kJ-VRfHW_TsVjMitsFkfLaQcOpFOe7-Mbim2hW0Q";
 
 function getSpreadsheet() {
-  if (SHEET_ID_OPTIONAL && SHEET_ID_OPTIONAL.trim() !== "") {
-    return SpreadsheetApp.openById(SHEET_ID_OPTIONAL);
+  try {
+    if (SHEET_ID_OPTIONAL && SHEET_ID_OPTIONAL.trim() !== "") {
+      return SpreadsheetApp.openById(SHEET_ID_OPTIONAL);
+    }
+  } catch (err) {
+    console.warn("openById falló, usando getActiveSpreadsheet:", err);
   }
   return SpreadsheetApp.getActiveSpreadsheet();
 }
@@ -53,9 +57,14 @@ function doGet(e) {
   const action = params.action || "test";
   const ss = getSpreadsheet();
 
-  // 1. Agregar publicación vía GET (100% libre de CORS en navegadores)
+  // 1. Agregar publicación vía GET (100% compatible y sin bloqueos de CORS)
   if (action === "addPublication") {
-    const pubSheet = ss.getSheetByName("Publicaciones");
+    let pubSheet = ss.getSheetByName("Publicaciones");
+    if (!pubSheet) {
+      setupDatabase();
+      pubSheet = ss.getSheetByName("Publicaciones");
+    }
+    
     pubSheet.appendRow([
       params.id || ("carrusel-" + Date.now()),
       params.date || (new Date().toISOString().split('T')[0]),
@@ -71,14 +80,15 @@ function doGet(e) {
       params.copyInstagram || "",
       new Date().toISOString()
     ]);
-    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Registro guardado en Google Sheet" }))
+    
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Registro guardado" }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
   // 2. Obtener Configuración
   if (action === "getConfig") {
     const configSheet = ss.getSheetByName("Parametros_Config");
-    const data = configSheet.getDataRange().getValues();
+    const data = configSheet ? configSheet.getDataRange().getValues() : [];
     const configObj = { author: {}, defaults: {} };
 
     for (let i = 1; i < data.length; i++) {
@@ -100,7 +110,7 @@ function doGet(e) {
   // 3. Obtener todas las publicaciones
   if (action === "getPublications") {
     const pubSheet = ss.getSheetByName("Publicaciones");
-    const data = pubSheet.getDataRange().getValues();
+    const data = pubSheet ? pubSheet.getDataRange().getValues() : [];
     const records = [];
 
     for (let i = 1; i < data.length; i++) {
@@ -112,35 +122,11 @@ function doGet(e) {
         format: data[i][4],
         slideCount: data[i][5],
         blueprint: data[i][6],
-        status: data[i][7],
-        pdfPath: data[i][8],
-        folderPath: data[i][9],
-        copyLinkedIn: data[i][10],
-        copyInstagram: data[i][11],
-        createdAt: data[i][12]
+        status: data[i][7]
       });
     }
 
     return ContentService.createTextOutput(JSON.stringify({ success: true, records: records }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 4. Guardar Parámetros de Configuración vía GET
-  if (action === "saveConfig") {
-    const configSheet = ss.getSheetByName("Parametros_Config");
-    configSheet.clearContents();
-    configSheet.appendRow(["Clave_Parametro", "Valor", "Descripcion"]);
-    configSheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#0F172A").setFontColor("#38BDF8");
-
-    if (params.author_name) configSheet.appendRow(["author_name", params.author_name, "Nombre del autor"]);
-    if (params.author_handle) configSheet.appendRow(["author_handle", params.author_handle, "Usuario"]);
-    if (params.author_title) configSheet.appendRow(["author_title", params.author_title, "Título"]);
-    if (params.default_format) configSheet.appendRow(["default_format", params.default_format, "Formato"]);
-    if (params.default_slide_count) configSheet.appendRow(["default_slide_count", String(params.default_slide_count), "Slides"]);
-    if (params.default_blueprint) configSheet.appendRow(["default_blueprint", params.default_blueprint, "Blueprint"]);
-    if (params.default_category) configSheet.appendRow(["default_category", params.default_category, "Categoría"]);
-
-    return ContentService.createTextOutput(JSON.stringify({ success: true }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
