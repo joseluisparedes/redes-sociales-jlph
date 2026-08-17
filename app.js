@@ -1,5 +1,5 @@
 // ==============================================================================
-// GITHUB PAGES CLIENT-SIDE APPLICATION & GOOGLE SHEETS SYNC
+// GITHUB PAGES CLIENT-SIDE APPLICATION & BULLETPROOF GOOGLE SHEETS SYNC
 // ==============================================================================
 
 let state = {
@@ -64,7 +64,17 @@ let state = {
   },
   publications: JSON.parse(localStorage.getItem('tech_publications')) || [
     {
-      id: "carrusel-vibecoding-v2",
+      id: "carrusel-1",
+      date: new Date().toISOString().split('T')[0],
+      topic: "Cómo Diseñar un Rate Limiter con Redis",
+      category: "IA & INGENIERÍA 2026",
+      format: "square",
+      slideCount: 6,
+      blueprint: "standard_executive",
+      status: "Generado"
+    },
+    {
+      id: "carrusel-2",
       date: new Date().toISOString().split('T')[0],
       topic: "El Fenómeno del Vibecoding en las Empresas",
       category: "IA & INGENIERÍA 2026",
@@ -177,7 +187,6 @@ async function loadData() {
     pill.style.background = 'rgba(16, 185, 129, 0.15)';
     pill.style.color = '#10B981';
     txt.innerText = 'Google Sheets Conectado';
-    syncFromGoogleSheets();
   } else {
     pill.style.background = 'rgba(245, 158, 11, 0.15)';
     pill.style.color = '#F59E0B';
@@ -188,18 +197,25 @@ async function loadData() {
   renderHistoryTable();
 }
 
-async function syncFromGoogleSheets() {
+/**
+ * Envía un registro al Google Sheet de forma 100% libre de CORS
+ */
+function pushRecordToGoogleSheet(pubRecord) {
   if (!state.googleSheetUrl) return;
-  try {
-    const res = await fetch(`${state.googleSheetUrl}?action=getConfig`);
-    const data = await res.json();
-    if (data && data.success && data.config) {
-      if (data.config.author?.name) state.config.author = data.config.author;
-      document.getElementById('nav-author-name').innerText = state.config.author.name;
-    }
-  } catch (err) {
-    console.warn('Sync notice:', err.message);
-  }
+  const url = `${state.googleSheetUrl}?action=addPublication` +
+    `&id=${encodeURIComponent(pubRecord.id)}` +
+    `&topic=${encodeURIComponent(pubRecord.topic)}` +
+    `&category=${encodeURIComponent(pubRecord.category)}` +
+    `&format=${encodeURIComponent(pubRecord.format)}` +
+    `&slideCount=${encodeURIComponent(pubRecord.slideCount)}` +
+    `&blueprint=${encodeURIComponent(pubRecord.blueprint)}` +
+    `&status=${encodeURIComponent(pubRecord.status)}` +
+    `&date=${encodeURIComponent(pubRecord.date)}`;
+
+  // Usar imagen oculta o fetch con GET para evitar cualquier bloqueo de CORS o redirect
+  const img = new Image();
+  img.src = url;
+  console.log('📡 Registro enviado a Google Sheets:', pubRecord.topic);
 }
 
 // ==============================================================================
@@ -243,11 +259,10 @@ function initGenerator() {
     previewActions.style.display = 'none';
     captionsBox.style.display = 'none';
 
-    // Generar diapositivas en memoria
     state.generatedSlides = buildSlideData(topic, category, format, blueprint, slideCount);
     state.currentSlideIndex = 0;
 
-    setTimeout(async () => {
+    setTimeout(() => {
       previewLoading.style.display = 'none';
       previewActions.style.display = 'flex';
       captionsBox.style.display = 'block';
@@ -255,7 +270,6 @@ function initGenerator() {
       renderActiveSlide();
       updateCaptionText('linkedin');
 
-      // Guardar en Historial y enviar a Google Sheets
       const pubRecord = {
         id: `carrusel-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
@@ -271,17 +285,8 @@ function initGenerator() {
       localStorage.setItem('tech_publications', JSON.stringify(state.publications));
       renderHistoryTable();
 
-      // Enviar a Google Sheet si hay webhook
-      if (state.googleSheetUrl) {
-        try {
-          fetch(state.googleSheetUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'addPublication', record: pubRecord })
-          });
-        } catch (err) {}
-      }
+      // Enviar a Google Sheet
+      pushRecordToGoogleSheet(pubRecord);
     }, 600);
   });
 
@@ -559,9 +564,8 @@ function updateCaptionText(type) {
 async function downloadPdfClient() {
   alert('⏳ Generando PDF para LinkedIn...');
   try {
-    const { PDFDocument, rgb } = PDFLib;
+    const { PDFDocument } = PDFLib;
     const pdfDoc = await PDFDocument.create();
-    const node = document.getElementById('slide-capture-node');
 
     for (let i = 0; i < state.generatedSlides.length; i++) {
       state.currentSlideIndex = i;
@@ -644,8 +648,13 @@ function renderHistoryTable() {
 }
 
 document.getElementById('btn-refresh-history')?.addEventListener('click', () => {
+  if (state.publications.length > 0 && state.googleSheetUrl) {
+    state.publications.forEach(p => pushRecordToGoogleSheet(p));
+    alert(`📡 Sincronizando ${state.publications.length} publicaciones con tu Google Sheet...`);
+  } else {
+    alert('🔄 Tabla actualizada.');
+  }
   renderHistoryTable();
-  alert('🔄 Tabla actualizada.');
 });
 
 // ==============================================================================
@@ -662,6 +671,11 @@ function initSettings() {
     localStorage.setItem('tech_sheet_url', url);
     alert('✅ URL de Google Sheets guardada.');
     loadData();
+
+    // Sincronizar inmediatamente las publicaciones existentes
+    if (state.publications.length > 0) {
+      state.publications.forEach(p => pushRecordToGoogleSheet(p));
+    }
   });
 
   brandForm.addEventListener('submit', (e) => {
@@ -674,5 +688,12 @@ function initSettings() {
     localStorage.setItem('tech_brand_config', JSON.stringify(state.config));
     alert('✅ Parámetros de marca guardados.');
     loadData();
+
+    // Enviar a Google Sheet si hay webhook
+    if (state.googleSheetUrl) {
+      const url = `${state.googleSheetUrl}?action=saveConfig&author_name=${encodeURIComponent(name)}&author_handle=${encodeURIComponent(handle)}&author_title=${encodeURIComponent(title)}`;
+      const img = new Image();
+      img.src = url;
+    }
   });
 }

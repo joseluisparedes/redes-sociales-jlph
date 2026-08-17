@@ -1,14 +1,11 @@
 /**
  * ==============================================================================
  * GOOGLE APPS SCRIPT: BASE DE DATOS Y CONFIGURACIÓN PARA AUTOMATIZACIÓN TECH
- * ==============================================================================
- * Si creas el script directamente desde script.google.com (Proyecto Independiente),
- * coloca el ID de tu hoja de cálculo en la variable SHEET_ID_OPTIONAL.
- * Si lo abres desde Extensiones -> Apps Script en la misma hoja, déjalo vacío ("").
+ * (VERSIÓN BULLETPROOF: SOPORTA GET Y POST SIN BLOQUEOS DE CORS)
  * ==============================================================================
  */
 
-const SHEET_ID_OPTIONAL = ""; // Opcional: Coloca el ID de tu hoja aquí si creas el script por fuera (ej: "1A2B3C...")
+const SHEET_ID_OPTIONAL = '13s9kJ-VRFhW_TsVjMitsFkfLaOcOpFDe7-Mbim2hW00'; // Tu ID de Google Sheet
 
 function getSpreadsheet() {
   if (SHEET_ID_OPTIONAL && SHEET_ID_OPTIONAL.trim() !== "") {
@@ -52,9 +49,33 @@ function setupDatabase() {
 
 function doGet(e) {
   setupDatabase();
-  const action = e.parameter ? e.parameter.action : "test";
+  const params = e.parameter || {};
+  const action = params.action || "test";
   const ss = getSpreadsheet();
 
+  // 1. Agregar publicación vía GET (100% libre de CORS en navegadores)
+  if (action === "addPublication") {
+    const pubSheet = ss.getSheetByName("Publicaciones");
+    pubSheet.appendRow([
+      params.id || ("carrusel-" + Date.now()),
+      params.date || (new Date().toISOString().split('T')[0]),
+      params.topic || "Tema sin título",
+      params.category || "TECH",
+      params.format || "square",
+      params.slideCount || 6,
+      params.blueprint || "standard_executive",
+      params.status || "Generado",
+      params.pdfPath || "",
+      params.folderPath || "",
+      params.copyLinkedIn || "",
+      params.copyInstagram || "",
+      new Date().toISOString()
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Registro guardado en Google Sheet" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 2. Obtener Configuración
   if (action === "getConfig") {
     const configSheet = ss.getSheetByName("Parametros_Config");
     const data = configSheet.getDataRange().getValues();
@@ -76,6 +97,7 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 3. Obtener todas las publicaciones
   if (action === "getPublications") {
     const pubSheet = ss.getSheetByName("Publicaciones");
     const data = pubSheet.getDataRange().getValues();
@@ -103,77 +125,29 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 4. Guardar Parámetros de Configuración vía GET
+  if (action === "saveConfig") {
+    const configSheet = ss.getSheetByName("Parametros_Config");
+    configSheet.clearContents();
+    configSheet.appendRow(["Clave_Parametro", "Valor", "Descripcion"]);
+    configSheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#0F172A").setFontColor("#38BDF8");
+
+    if (params.author_name) configSheet.appendRow(["author_name", params.author_name, "Nombre del autor"]);
+    if (params.author_handle) configSheet.appendRow(["author_handle", params.author_handle, "Usuario"]);
+    if (params.author_title) configSheet.appendRow(["author_title", params.author_title, "Título"]);
+    if (params.default_format) configSheet.appendRow(["default_format", params.default_format, "Formato"]);
+    if (params.default_slide_count) configSheet.appendRow(["default_slide_count", String(params.default_slide_count), "Slides"]);
+    if (params.default_blueprint) configSheet.appendRow(["default_blueprint", params.default_blueprint, "Blueprint"]);
+    if (params.default_category) configSheet.appendRow(["default_category", params.default_category, "Categoría"]);
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Google Sheets DB Online" }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
-  setupDatabase();
-  try {
-    const body = JSON.parse(e.postData.contents);
-    const action = body.action;
-    const ss = getSpreadsheet();
-
-    if (action === "saveConfig") {
-      const configSheet = ss.getSheetByName("Parametros_Config");
-      const cfg = body.config;
-      configSheet.clearContents();
-      configSheet.appendRow(["Clave_Parametro", "Valor", "Descripcion"]);
-      configSheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#0F172A").setFontColor("#38BDF8");
-
-      if (cfg.author?.name) configSheet.appendRow(["author_name", cfg.author.name, "Nombre del autor"]);
-      if (cfg.author?.handle) configSheet.appendRow(["author_handle", cfg.author.handle, "Usuario"]);
-      if (cfg.author?.title) configSheet.appendRow(["author_title", cfg.author.title, "Título"]);
-      if (cfg.defaults?.format) configSheet.appendRow(["default_format", cfg.defaults.format, "Formato"]);
-      if (cfg.defaults?.slideCount) configSheet.appendRow(["default_slide_count", String(cfg.defaults.slideCount), "Slides"]);
-      if (cfg.defaults?.blueprint) configSheet.appendRow(["default_blueprint", cfg.defaults.blueprint, "Blueprint"]);
-      if (cfg.defaults?.category) configSheet.appendRow(["default_category", cfg.defaults.category, "Categoría"]);
-
-      return ContentService.createTextOutput(JSON.stringify({ success: true }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (action === "addPublication") {
-      const pubSheet = ss.getSheetByName("Publicaciones");
-      const r = body.record;
-      pubSheet.appendRow([
-        r.id || "",
-        r.date || new Date().toISOString().split('T')[0],
-        r.topic || "",
-        r.category || "",
-        r.format || "square",
-        r.slideCount || 6,
-        r.blueprint || "standard_executive",
-        r.status || "Generado",
-        r.pdfPath || "",
-        r.folderPath || "",
-        r.copyLinkedIn || "",
-        r.copyInstagram || "",
-        r.createdAt || new Date().toISOString()
-      ]);
-
-      return ContentService.createTextOutput(JSON.stringify({ success: true }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (action === "updateStatus") {
-      const pubSheet = ss.getSheetByName("Publicaciones");
-      const data = pubSheet.getDataRange().getValues();
-      for (let i = 1; i < data.length; i++) {
-        if (data[i][0] === body.id) {
-          pubSheet.getRange(i + 1, 8).setValue(body.status);
-          break;
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({ success: true }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Acción no reconocida" }))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  return doGet(e);
 }
