@@ -1,5 +1,6 @@
 // ==============================================================================
 // GITHUB PAGES CLIENT-SIDE APPLICATION & BULLETPROOF GOOGLE SHEETS SYNC
+// MULTIRED & MAKE.COM INTEGRATION
 // ==============================================================================
 
 const DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec";
@@ -16,7 +17,8 @@ let state = {
       format: "square",
       category: "IA & INGENIERÍA 2026",
       slideCount: 6,
-      blueprint: "standard_executive"
+      blueprint: "standard_executive",
+      networks: ["linkedin", "instagram", "facebook"]
     }
   },
   blueprints: {
@@ -71,6 +73,7 @@ let state = {
       topic: "El Fenómeno del Vibecoding en las Empresas",
       category: "IA & INGENIERÍA 2026",
       format: "square",
+      networks: ["linkedin", "instagram", "facebook"],
       slideCount: 6,
       blueprint: "standard_executive",
       status: "Generado"
@@ -81,12 +84,16 @@ let state = {
       topic: "Cómo Diseñar un Rate Limiter con Redis",
       category: "IA & INGENIERÍA 2026",
       format: "square",
+      networks: ["linkedin", "instagram"],
       slideCount: 6,
       blueprint: "standard_executive",
       status: "Generado"
     }
   ],
   googleSheetUrl: localStorage.getItem('tech_sheet_url') || DEFAULT_SHEET_URL,
+  makeWebhookUrl: localStorage.getItem('tech_make_webhook_url') || "",
+  selectedNetworks: ["linkedin", "instagram", "facebook"],
+  selectedFormat: "square",
   generatedSlides: [],
   currentSlideIndex: 0
 };
@@ -97,6 +104,7 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initTabs();
+  initSocialAndDimensionPickers();
   initGenerator();
   initSettings();
   loadData();
@@ -168,6 +176,47 @@ function initTabs() {
 }
 
 // ==============================================================================
+// MÓDULOS DE REDES SOCIALES Y PROPORCIONES
+// ==============================================================================
+function initSocialAndDimensionPickers() {
+  // Redes Sociales
+  const socialCards = document.querySelectorAll('.social-card');
+  socialCards.forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const chk = card.querySelector('input[type="checkbox"]');
+      chk.checked = !chk.checked;
+      card.classList.toggle('active', chk.checked);
+
+      // Actualizar array de redes seleccionadas
+      state.selectedNetworks = [];
+      document.querySelectorAll('.social-card input[type="checkbox"]').forEach(c => {
+        if (c.checked) {
+          state.selectedNetworks.push(c.closest('.social-card').dataset.network);
+        }
+      });
+    });
+  });
+
+  // Dimensiones / Formatos
+  const dimCards = document.querySelectorAll('.dimension-card');
+  dimCards.forEach(card => {
+    card.addEventListener('click', () => {
+      dimCards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) {
+        radio.checked = true;
+        state.selectedFormat = radio.value;
+      }
+      if (state.generatedSlides.length > 0) {
+        renderActiveSlide();
+      }
+    });
+  });
+}
+
+// ==============================================================================
 // CARGA Y SINCRONIZACIÓN GOOGLE SHEETS
 // ==============================================================================
 async function loadData() {
@@ -181,6 +230,7 @@ async function loadData() {
   document.getElementById('cfg-author-handle').value = state.config.author?.handle || '';
   document.getElementById('cfg-author-title').value = state.config.author?.title || '';
   document.getElementById('sheet-webhook-url').value = state.googleSheetUrl || DEFAULT_SHEET_URL;
+  document.getElementById('make-webhook-url').value = state.makeWebhookUrl || '';
 
   const pill = document.getElementById('sheets-status-pill');
   const txt = document.getElementById('sheets-status-text');
@@ -205,6 +255,8 @@ async function loadData() {
 function pushRecordToGoogleSheet(pubRecord) {
   const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
   if (!targetUrl) return;
+
+  const networksStr = Array.isArray(pubRecord.networks) ? pubRecord.networks.join(', ') : (pubRecord.networks || 'linkedin, instagram, facebook');
 
   const fullUrl = `${targetUrl}?action=addPublication` +
     `&id=${encodeURIComponent(pubRecord.id)}` +
@@ -251,9 +303,15 @@ function initGenerator() {
     
     const topic = document.getElementById('gen-topic').value.trim();
     const category = document.getElementById('gen-category').value.trim();
-    const format = document.getElementById('gen-format').value;
+    const format = state.selectedFormat || "square";
     const blueprint = document.getElementById('gen-blueprint').value;
     const slideCount = Number(document.getElementById('gen-slide-count').value);
+    const networks = [...state.selectedNetworks];
+
+    if (networks.length === 0) {
+      alert('⚠️ Por favor selecciona al menos una red social de destino.');
+      return;
+    }
 
     const previewLoading = document.getElementById('preview-loading');
     const previewActions = document.getElementById('preview-actions');
@@ -280,6 +338,7 @@ function initGenerator() {
         topic,
         category,
         format,
+        networks,
         slideCount,
         blueprint,
         status: "Generado"
@@ -291,6 +350,11 @@ function initGenerator() {
 
       // Enviar a Google Sheet
       pushRecordToGoogleSheet(pubRecord);
+
+      // Enviar a Make.com si hay webhook configurado
+      if (state.makeWebhookUrl) {
+        dispatchToMakeWebhook(pubRecord);
+      }
     }, 600);
   });
 
@@ -311,6 +375,43 @@ function initGenerator() {
 
   document.getElementById('btn-download-pdf').addEventListener('click', downloadPdfClient);
   document.getElementById('btn-download-png').addEventListener('click', downloadPngClient);
+  document.getElementById('btn-send-make').addEventListener('click', () => {
+    if (!state.makeWebhookUrl) {
+      alert('⚠️ Configura primero tu Webhook de Make.com en la pestaña "⚙️ Configuración, Make & Cron".');
+      return;
+    }
+    const latest = state.publications[0];
+    if (latest) {
+      dispatchToMakeWebhook(latest);
+      alert('⚡ ¡Contenido despachado exitosamente al Webhook de Make.com!');
+    }
+  });
+}
+
+function dispatchToMakeWebhook(pubRecord) {
+  if (!state.makeWebhookUrl) return;
+  const payload = {
+    event: "PUBLISH_CAROUSEL",
+    timestamp: new Date().toISOString(),
+    topic: pubRecord.topic,
+    category: pubRecord.category,
+    networks: pubRecord.networks || state.selectedNetworks,
+    format: pubRecord.format,
+    slide_count: pubRecord.slideCount,
+    captions: {
+      linkedin: document.getElementById('caption-text-area').value,
+      instagram: document.getElementById('caption-text-area').value,
+      facebook: document.getElementById('caption-text-area').value
+    },
+    author: state.config.author
+  };
+
+  fetch(state.makeWebhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(() => {});
 }
 
 function updateBlueprintSummary() {
@@ -404,6 +505,7 @@ function renderActiveSlide() {
   const total = state.generatedSlides.length;
   const currentNum = String(state.currentSlideIndex + 1).padStart(2, '0');
   const author = state.config.author || { name: "Ing. José Luis", handle: "@joseluis_tech" };
+  const formatClass = `format-${state.selectedFormat || 'square'}`;
 
   let contentHtml = "";
 
@@ -411,29 +513,29 @@ function renderActiveSlide() {
     contentHtml = `
       <div>
         <div style="font-family: var(--font-mono); color: var(--amber); font-size: 13px; font-weight: 700; margin-bottom: 12px;">${slide.hook}</div>
-        <h2 style="font-size: 32px; font-weight: 900; line-height: 1.15; color: #FFF; margin-bottom: 12px;">${slide.title}</h2>
-        <p style="font-size: 15px; color: var(--text-muted); line-height: 1.4; margin-bottom: 20px;">${slide.subtitle}</p>
+        <h2 style="font-size: 30px; font-weight: 900; line-height: 1.15; color: #FFF; margin-bottom: 12px;">${slide.title}</h2>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.4; margin-bottom: 18px;">${slide.subtitle}</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div style="background: rgba(6,182,212,0.1); border: 1px solid var(--cyan); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 14px; color: #FFF;">⚡ ${slide.badge1}</div>
-          <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--emerald); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 14px; color: #FFF;">🛡️ ${slide.badge2}</div>
+          <div style="background: rgba(6,182,212,0.1); border: 1px solid var(--cyan); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">⚡ ${slide.badge1}</div>
+          <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--emerald); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #FFF;">🛡️ ${slide.badge2}</div>
         </div>
       </div>
     `;
   } else if (slide.type === "contrast") {
     contentHtml = `
       <div>
-        <h3 style="font-size: 24px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${slide.subheading}</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.4); padding: 14px; border-radius: 12px;">
-            <h4 style="color: var(--rose); font-size: 15px; margin-bottom: 8px;">❌ ${slide.badTitle}</h4>
-            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 6px;">
+        <h3 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.4); padding: 12px; border-radius: 10px;">
+            <h4 style="color: var(--rose); font-size: 14px; margin-bottom: 6px;">❌ ${slide.badTitle}</h4>
+            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
               ${slide.badItems.map(i => `<li>• ${i}</li>`).join('')}
             </ul>
           </div>
-          <div style="background: rgba(6,182,212,0.08); border: 1px solid var(--cyan); padding: 14px; border-radius: 12px;">
-            <h4 style="color: var(--cyan); font-size: 15px; margin-bottom: 8px;">✅ ${slide.goodTitle}</h4>
-            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: rgba(6,182,212,0.08); border: 1px solid var(--cyan); padding: 12px; border-radius: 10px;">
+            <h4 style="color: var(--cyan); font-size: 14px; margin-bottom: 6px;">✅ ${slide.goodTitle}</h4>
+            <ul style="list-style: none; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px;">
               ${slide.goodItems.map(i => `<li>✓ ${i}</li>`).join('')}
             </ul>
           </div>
@@ -443,20 +545,20 @@ function renderActiveSlide() {
   } else if (slide.type === "matrix") {
     contentHtml = `
       <div>
-        <h3 style="font-size: 24px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${slide.subheading}</p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(16,185,129,0.1); border-left: 4px solid var(--emerald); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #FFF;">${slide.stat1Desc}</span>
-            <span style="font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: var(--emerald);">${slide.stat1}</span>
+        <h3 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(16,185,129,0.1); border-left: 4px solid var(--emerald); padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #FFF;">${slide.stat1Desc}</span>
+            <span style="font-family: var(--font-mono); font-size: 16px; font-weight: 900; color: var(--emerald);">${slide.stat1}</span>
           </div>
-          <div style="background: rgba(245,158,11,0.1); border-left: 4px solid var(--amber); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #FFF;">${slide.stat2Desc}</span>
-            <span style="font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: var(--amber);">${slide.stat2}</span>
+          <div style="background: rgba(245,158,11,0.1); border-left: 4px solid var(--amber); padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #FFF;">${slide.stat2Desc}</span>
+            <span style="font-family: var(--font-mono); font-size: 16px; font-weight: 900; color: var(--amber);">${slide.stat2}</span>
           </div>
-          <div style="background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #FFF;">${slide.stat3Desc}</span>
-            <span style="font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: var(--rose);">${slide.stat3}</span>
+          <div style="background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose); padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #FFF;">${slide.stat3Desc}</span>
+            <span style="font-family: var(--font-mono); font-size: 16px; font-weight: 900; color: var(--rose);">${slide.stat3}</span>
           </div>
         </div>
       </div>
@@ -464,38 +566,38 @@ function renderActiveSlide() {
   } else if (slide.type === "pipeline") {
     contentHtml = `
       <div>
-        <h3 style="font-size: 24px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${slide.subheading}</p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #FFF;">🔹 ${slide.step1}</div>
-          <div style="background: rgba(6,182,212,0.15); border: 1px solid var(--cyan); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 800; color: var(--cyan);">⚡ ${slide.step2}</div>
-          <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #FFF;">🛡️ ${slide.step3}</div>
+        <h3 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #FFF;">🔹 ${slide.step1}</div>
+          <div style="background: rgba(6,182,212,0.15); border: 1px solid var(--cyan); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--cyan);">⚡ ${slide.step2}</div>
+          <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #FFF;">🛡️ ${slide.step3}</div>
         </div>
       </div>
     `;
   } else if (slide.type === "rules") {
     contentHtml = `
       <div>
-        <h3 style="font-size: 24px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${slide.subheading}</p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #FFF;">🎯 ${slide.rule1}</div>
-          <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #FFF;">🛡️ ${slide.rule2}</div>
-          <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #FFF;">🧪 ${slide.rule3}</div>
+        <h3 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #FFF;">🎯 ${slide.rule1}</div>
+          <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #FFF;">🛡️ ${slide.rule2}</div>
+          <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #FFF;">🧪 ${slide.rule3}</div>
         </div>
       </div>
     `;
   } else {
     contentHtml = `
       <div>
-        <h3 style="font-size: 24px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">${slide.subheading}</p>
-        <div style="background: rgba(6,182,212,0.1); border: 1.5px solid var(--cyan); border-radius: 14px; padding: 20px; text-align: center;">
-          <h4 style="font-size: 20px; font-weight: 900; color: #FFF; margin-bottom: 8px;">${slide.question}</h4>
-          <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">${slide.questionDesc}</p>
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <span style="background: var(--cyan); color: #020617; font-weight: 800; font-size: 13px; padding: 8px 14px; border-radius: 8px;">Comentar 💬</span>
-            <span style="background: rgba(255,255,255,0.1); color: #FFF; font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 8px;">Guardar 🔖</span>
+        <h3 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 6px;">${slide.heading}</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">${slide.subheading}</p>
+        <div style="background: rgba(6,182,212,0.1); border: 1.5px solid var(--cyan); border-radius: 12px; padding: 18px; text-align: center;">
+          <h4 style="font-size: 18px; font-weight: 900; color: #FFF; margin-bottom: 6px;">${slide.question}</h4>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">${slide.questionDesc}</p>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <span style="background: var(--cyan); color: #020617; font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 6px;">Comentar 💬</span>
+            <span style="background: rgba(255,255,255,0.1); color: #FFF; font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 6px;">Guardar 🔖</span>
           </div>
         </div>
       </div>
@@ -504,7 +606,7 @@ function renderActiveSlide() {
 
   container.innerHTML = `
     <div class="slide-viewer">
-      <div id="slide-capture-node" class="slide-rendered-frame">
+      <div id="slide-capture-node" class="slide-rendered-frame ${formatClass}">
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 800; color: var(--cyan); background: rgba(6,182,212,0.12); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--cyan);">TECH & IA 2026</span>
@@ -512,7 +614,7 @@ function renderActiveSlide() {
         </div>
 
         <!-- Body -->
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 14px 0;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 12px 0;">
           ${contentHtml}
         </div>
 
@@ -557,14 +659,16 @@ function updateCaptionText(type) {
   let caption = "";
   if (type === 'linkedin') {
     caption = `¿Cómo resolver "${topic}" con estándares de alta escala? 🚀\n\nEn este carrusel técnico desglosamos las decisiones de arquitectura, los trade-offs y las 3 reglas de oro para implementar en producción.\n\n📌 Desliza el documento adjunto para ver el blueprint completo.\n\n¿Qué enfoque aplicas tú en tu empresa? Te leo en los comentarios. 👇\n\n#SystemDesign #SoftwareEngineering #Cloud #TechLeadership #DevOps`;
-  } else {
+  } else if (type === 'instagram') {
     caption = `${topic} ⚡\n\nGuía visual paso a paso para líderes técnicos e ingenieros de software.\n\nDesliza para ver el desglose ➔\n\n💾 Guarda este post para tu próxima sesión de arquitectura.\n👉 Sígueme en ${author} para más contenido tech diario.\n\n#ingenieriadesistemas #arquitectura #programacion #tech #desarrollo`;
+  } else {
+    caption = `${topic} 🚀\n\nNueva entrega técnica sobre ingeniería de sistemas y buenas prácticas de software. Revisa las láminas adjuntas para conocer las reglas de arquitectura recomendadas.`;
   }
 
   document.getElementById('caption-text-area').value = caption;
 }
 
-// Descarga en PDF (client-side con pdf-lib)
+// Descarga en PDF
 async function downloadPdfClient() {
   alert('⏳ Generando PDF para LinkedIn...');
   try {
@@ -619,20 +723,19 @@ function renderHistoryTable() {
 
   state.publications.forEach(p => {
     const tr = document.createElement('tr');
+    const nets = Array.isArray(p.networks) ? p.networks.join(', ') : (p.networks || 'LinkedIn, IG, FB');
     tr.innerHTML = `
       <td>${p.date || '-'}</td>
       <td><b>${p.topic || '-'}</b></td>
       <td><span class="tag-cyan">${p.category || '-'}</span></td>
       <td>${p.format || 'square'}</td>
+      <td><span style="font-size: 11px; color: var(--cyan);">${nets}</span></td>
       <td>${p.slideCount || 6}</td>
       <td>${p.blueprint || '-'}</td>
       <td>
         <span class="status-pill ${p.status === 'Publicado' ? 'publicado' : 'generado'}" data-id="${p.id}">
           ${p.status || 'Generado'}
         </span>
-      </td>
-      <td>
-        <button class="btn-secondary btn-sm" onclick="alert('Publicación registrada en Google Sheets')">Ver</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -668,6 +771,15 @@ document.getElementById('btn-refresh-history')?.addEventListener('click', () => 
 function initSettings() {
   const sheetsForm = document.getElementById('sheets-form');
   const brandForm = document.getElementById('brand-form');
+  const makeForm = document.getElementById('make-form');
+
+  makeForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = document.getElementById('make-webhook-url').value.trim();
+    state.makeWebhookUrl = url;
+    localStorage.setItem('tech_make_webhook_url', url);
+    alert('✅ Webhook de Make.com guardado exitosamente.');
+  });
 
   sheetsForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -677,7 +789,6 @@ function initSettings() {
     alert('✅ URL de Google Sheets guardada.');
     loadData();
 
-    // Sincronizar inmediatamente las publicaciones existentes
     if (state.publications.length > 0) {
       state.publications.forEach(p => pushRecordToGoogleSheet(p));
     }
@@ -693,13 +804,5 @@ function initSettings() {
     localStorage.setItem('tech_brand_config', JSON.stringify(state.config));
     alert('✅ Parámetros de marca guardados.');
     loadData();
-
-    // Enviar a Google Sheet si hay webhook
-    const targetUrl = state.googleSheetUrl || DEFAULT_SHEET_URL;
-    if (targetUrl) {
-      const url = `${targetUrl}?action=saveConfig&author_name=${encodeURIComponent(name)}&author_handle=${encodeURIComponent(handle)}&author_title=${encodeURIComponent(title)}`;
-      const img = new Image();
-      img.src = url;
-    }
   });
 }

@@ -1,0 +1,166 @@
+{
+  "name": "Tech Content Engine - Autopublicador Multired (LinkedIn, Instagram, Facebook)",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": null,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1. Receptor Webhook (Tech Engine)"
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "2. Router Multired"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "linkedin:createPost",
+              "version": 1,
+              "parameters": {
+                "account": null
+              },
+              "filter": {
+                "name": "Filtro: Publicar en LinkedIn",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.networks}}",
+                      "o": "contain",
+                      "b": "linkedin"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "text": "{{1.captions.linkedin}}",
+                "visibility": "PUBLIC",
+                "mediaType": "DOCUMENT",
+                "documentUrl": "{{1.assets.pdf_url}}",
+                "documentTitle": "{{1.topic}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 600,
+                  "y": -150,
+                  "name": "3. Publicar Carrusel Documento en LinkedIn"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 4,
+              "module": "instagram:createCarouselPost",
+              "version": 1,
+              "parameters": {
+                "account": null
+              },
+              "filter": {
+                "name": "Filtro: Publicar en Instagram",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.networks}}",
+                      "o": "contain",
+                      "b": "instagram"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "caption": "{{1.captions.instagram}}",
+                "mediaUrls": "{{1.assets.images}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 600,
+                  "y": 0,
+                  "name": "4. Publicar Carrusel de Fotos en Instagram"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "facebook:createPagePhotoPost",
+              "version": 1,
+              "parameters": {
+                "account": null
+              },
+              "filter": {
+                "name": "Filtro: Publicar en Facebook",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.networks}}",
+                      "o": "contain",
+                      "b": "facebook"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "message": "{{1.captions.facebook}}",
+                "url": "{{1.assets.cover_image}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 600,
+                  "y": 150,
+                  "name": "5. Publicar Post en Página de Facebook"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false
+    }
+  }
+}

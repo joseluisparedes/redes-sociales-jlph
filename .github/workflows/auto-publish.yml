@@ -1,0 +1,63 @@
+name: 🚀 Autopublicador Tech Desatendido (Cron)
+
+on:
+  # Programación automática: 2 veces al día (13:00 UTC y 23:00 UTC = 8:00 AM y 6:00 PM UTC-5)
+  schedule:
+    - cron: '0 13,23 * * *'
+
+  # Permite disparar la publicación manualmente con un clic desde GitHub
+  workflow_dispatch:
+    inputs:
+      custom_topic:
+        description: 'Tema personalizado (Opcional, dejar vacío para rotativo automático)'
+        required: false
+        default: ''
+      format:
+        description: 'Formato visual'
+        required: true
+        default: 'square'
+        type: choice
+        options:
+          - square
+          - story
+          - portrait
+
+jobs:
+  auto-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clonar Repositorio
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Instalar Dependencias
+        run: npm ci
+
+      - name: 🎭 Instalar Playwright Chromium (Retina 2X Engine)
+        run: npx playwright install --with-deps chromium
+
+      - name: ⚡ Ejecutar Motor de Autopublicación & Despacho a Make.com
+        env:
+          GOOGLE_SHEETS_WEBHOOK_URL: ${{ secrets.GOOGLE_SHEETS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec' }}
+          MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
+          PUBLISH_FORMAT: ${{ github.event.inputs.format || 'square' }}
+          PUBLISH_NETWORKS: 'linkedin,instagram,facebook'
+        run: |
+          if [ -n "${{ github.event.inputs.custom_topic }}" ]; then
+            node src/auto-publisher.js "${{ github.event.inputs.custom_topic }}"
+          else
+            node src/auto-publisher.js
+          fi
+
+      - name: 📤 Guardar Artefactos Generados (PDFs & PNGs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: carruseles-publicados-${{ github.run_number }}
+          path: output/
+          retention-days: 14

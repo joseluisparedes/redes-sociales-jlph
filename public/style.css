@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
 :root {
   --bg-dark: #030712;
   --bg-surface: #0F172A;
@@ -372,6 +374,184 @@ textarea {
   background: rgba(6, 182, 212, 0.2);
 }
 
+/* ==========================================================
+   NUEVO MÓDULO: SELECTOR DE REDES SOCIALES
+   ========================================================== */
+.social-networks-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.social-card {
+  background: #090D16;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.social-card input[type="checkbox"] {
+  display: none;
+}
+
+.social-card .social-icon {
+  font-size: 20px;
+}
+
+.social-card .social-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.social-card .social-info b {
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.social-card .social-info span {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.social-card.active {
+  border-color: var(--cyan);
+  background: rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+}
+
+.social-card.active .social-info b {
+  color: var(--cyan);
+}
+
+/* ==========================================================
+   NUEVO MÓDULO: SELECTOR DE DIMENSIONES Y FORMATOS
+   ========================================================== */
+.dimension-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dimension-card {
+  background: #090D16;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dimension-card input[type="radio"] {
+  display: none;
+}
+
+.dim-box {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.square-box { width: 36px; height: 36px; }
+.story-box { width: 24px; height: 42px; }
+.landscape-box { width: 44px; height: 26px; }
+.portrait-box { width: 30px; height: 38px; }
+
+.dim-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.dim-label b {
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.dim-label span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dimension-card.active {
+  border-color: var(--cyan);
+  background: rgba(6, 182, 212, 0.1);
+}
+
+.dimension-card.active .dim-box {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.dimension-card.active .dim-label b {
+  color: var(--cyan);
+}
+
+/* ==========================================================
+   CRON & MAKE BOXES
+   ========================================================== */
+.cron-status-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.cron-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--emerald);
+}
+
+.dot-live {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 10px var(--emerald);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.cron-schedule-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-badge {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--emerald);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
 .blueprint-summary-box {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border-color);
@@ -441,6 +621,16 @@ textarea {
   padding: 16px 28px;
 }
 
+.btn-accent {
+  background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+  color: #020617;
+  font-weight: 800;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .btn-secondary {
   background: rgba(255, 255, 255, 0.06);
   color: #FFFFFF;
@@ -451,6 +641,9 @@ textarea {
   border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-secondary:hover {
@@ -520,21 +713,27 @@ textarea {
   width: 100%;
 }
 
-.slide-img-box {
+/* Marcos adaptativos de proporción */
+.slide-rendered-frame {
   width: 100%;
-  max-width: 460px;
-  aspect-ratio: 1/1;
+  max-width: 480px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--cyan);
+  background: radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.15) 0%, transparent 45%),
+              linear-gradient(180deg, #030712 0%, #0B1120 100%);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
 }
 
-.slide-img-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
+.slide-rendered-frame.format-square { aspect-ratio: 1/1; }
+.slide-rendered-frame.format-story { aspect-ratio: 9/16; max-width: 340px; }
+.slide-rendered-frame.format-landscape { aspect-ratio: 16/9; max-width: 580px; }
+.slide-rendered-frame.format-portrait { aspect-ratio: 4/5; max-width: 420px; }
 
 .slide-nav-controls {
   display: flex;
