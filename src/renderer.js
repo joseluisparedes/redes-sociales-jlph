@@ -95,8 +95,11 @@ class CarouselRenderer {
     return {
       slug,
       folder: targetFolder,
+      outputDir: targetFolder,
       images: generatedImages,
+      slides: generatedImages,
       pdf: pdfPath,
+      pdfPath: pdfPath,
       captions: captionsPath
     };
   }

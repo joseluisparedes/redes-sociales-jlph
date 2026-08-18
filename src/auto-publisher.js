@@ -9,11 +9,10 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { renderCarousel } = require('./renderer');
-const { getBlueprint, getBrandConfig } = require('./config-manager');
+const { ContentEngine } = require('./content-engine');
+const { ConfigManager } = require('./config-manager');
 const { addPublication, getConfiguration } = require('./sheets-db');
 
-// Catálogo de temas de alta escala para publicación desatendida
 const CURATED_TECH_TOPICS = [
   {
     topic: "El Fenómeno del Vibecoding: ¿Revolución o Deuda Técnica?",
@@ -54,18 +53,21 @@ async function runAutoPublisher() {
   console.log("═══════════════════════════════════════════════════════════════\n");
 
   try {
+    const configMgr = new ConfigManager();
+    const engine = new ContentEngine();
+
     // 1. Cargar Configuración de Marca y Base de Datos
-    let brandConfig = getBrandConfig();
+    let brandConfig = configMgr.getBrand();
     try {
       const cloudConfig = await getConfiguration();
       if (cloudConfig && cloudConfig.author) {
-        brandConfig.author = { ...brandConfig.author, ...cloudConfig.author };
+        brandConfig = { ...brandConfig, ...cloudConfig.author };
       }
     } catch (e) {
       console.log("ℹ️ Usando configuración de marca local");
     }
 
-    // 2. Seleccionar Tema para Publicar (Rotativo o de entrada)
+    // 2. Seleccionar Tema para Publicar
     const topicArg = process.argv[2];
     let selectedItem = CURATED_TECH_TOPICS[Math.floor(Math.random() * CURATED_TECH_TOPICS.length)];
     if (topicArg) {
@@ -87,22 +89,35 @@ async function runAutoPublisher() {
     console.log(`🌐 Redes Destino: [${networks.join(', ')}]\n`);
 
     // 3. Renderizar Diapositivas en Alta Resolución Retina 2X y Compilar PDF
-    const result = await renderCarousel({
+    const plan = configMgr.buildCarouselPlan({
       topic: selectedItem.topic,
       category: selectedItem.category,
       format: format,
       slideCount: 6,
-      blueprintKey: selectedItem.blueprint,
-      authorOverride: brandConfig.author
+      blueprint: selectedItem.blueprint
+    });
+
+    const result = await engine.render({
+      id: `carrusel-${Date.now()}`,
+      title: plan.topic,
+      category: plan.category,
+      format: plan.format,
+      slides: [
+        { type: "cover_hero", title: plan.topic, subtitle: "Decisiones de arquitectura, trade-offs y mejores prácticas para ingeniería de sistemas.", hook: "⚡ ANÁLISIS DE ALTO IMPACTO", badge1: "10x Velocidad", badge2: "Cero Caídas" },
+        { type: "split_contrast", title: "¿Dónde Falla el Enfoque Común?", subtitle: "Comparativa entre malas prácticas vs arquitectura recomendada:", badTitle: "Práctica Antigua", badItems: ["Acoplamiento excesivo", "Sin caché en capas", "Single point of failure"], goodTitle: "Diseño Moderno", goodItems: ["Arquitectura desacoplada", "Caché distribuido con Redis", "Resiliencia activa"] },
+        { type: "impact_matrix", title: "Impacto & Métricas en Producción", subtitle: "Resultados reales observados tras aplicar la arquitectura:", stat1: "-85% Latency", stat1Desc: "Reducción en tiempo de respuesta P99", stat2: "10M+ RPS", stat2Desc: "Throughput sostenido bajo picos de carga", stat3: "3x Deuda Oculta", stat3Desc: "Riesgo de omitir revisión de arquitectura" },
+        { type: "process_pipeline", title: "El Pipeline Seguro en 3 Fases", subtitle: "Cómo implementarlo en empresas serias sin romper producción:", step1: "1. Vibe & Exploración rápida", step2: "2. Filtro de Arquitectura Senior", step3: "3. Hardening & Tests automáticos" },
+        { type: "golden_rules", title: "3 Reglas de Oro para Líderes Tech", subtitle: "Principios para liderar ingeniería de sistemas moderna:", rule1: "1. La IA escribe, el Arquitecto responde", rule2: "2. Cero 'Vibe' en el Core Crítico", rule3: "3. Los Tests son tu escudo protector" },
+        { type: "summary_cta", title: "El Futuro del Ingeniero de Sistemas", subtitle: "La habilidad clave ya no es solo escribir sintaxis, sino diseñar arquitecturas:", question: "¿Y en tu empresa?", questionDesc: "¿Ya están adoptando estas prácticas o prefieren el flujo tradicional?" }
+      ]
     });
 
     console.log(`\n✅ Renderizado completado exitosamente:`);
     console.log(`   📄 PDF para LinkedIn: ${result.pdfPath}`);
     console.log(`   🖼️ Diapositivas: ${result.slides.length} PNGs generados`);
-    console.log(`   📝 Copys generados para redes sociales`);
 
     // 4. Preparar Payload para Make.com Webhook
-    const makeWebhookUrl = process.env.MAKE_WEBHOOK_URL || brandConfig.makeWebhookUrl;
+    const makeWebhookUrl = process.env.MAKE_WEBHOOK_URL;
 
     const payloadForMake = {
       event: "PUBLISH_CAROUSEL",
@@ -113,21 +128,21 @@ async function runAutoPublisher() {
       format: format,
       slide_count: result.slides.length,
       captions: {
-        linkedin: result.copySummary?.linkedin || `¿Cómo aplicar ${selectedItem.topic} en producción? Desliza el documento adjunto para ver las reglas de arquitectura.\n\n#SoftwareArchitecture #Engineering #TechLeadership`,
-        instagram: result.copySummary?.instagram || `${selectedItem.topic} ⚡\n\nGuía visual de ingeniería de sistemas.\n\nDesliza para ver el desglose ➔\n\n#ingenieriadesistemas #tech #arquitectura`,
-        facebook: result.copySummary?.facebook || `${selectedItem.topic} - Guía técnica para líderes e ingenieros de software.`
+        linkedin: `¿Cómo resolver "${selectedItem.topic}" con estándares de alta escala? 🚀\n\nEn este carrusel técnico desglosamos las decisiones de arquitectura, los trade-offs y las 3 reglas de oro para implementar en producción.\n\n📌 Desliza el documento adjunto para ver el blueprint completo.\n\n#SystemDesign #SoftwareEngineering #Cloud #TechLeadership #DevOps`,
+        instagram: `${selectedItem.topic} ⚡\n\nGuía visual paso a paso para líderes técnicos e ingenieros de software.\n\nDesliza para ver el desglose ➔\n\n#ingenieriadesistemas #arquitectura #programacion #tech #desarrollo`,
+        facebook: `${selectedItem.topic} - Guía técnica de arquitectura de software para líderes y desarrolladores.`
       },
       assets: {
         pdf_local_path: result.pdfPath,
         images_count: result.slides.length,
         cover_image: result.slides[0] ? path.resolve(result.slides[0]) : null
       },
-      author: brandConfig.author
+      author: brandConfig
     };
 
     // 5. Enviar al Webhook de Make.com si está configurado
     if (makeWebhookUrl && makeWebhookUrl.startsWith("http")) {
-      console.log(`\n📡 Despachando payload al Webhook de Make.com (${makeWebhookUrl.slice(0, 45)}...)...`);
+      console.log(`\n📡 Despachando payload al Webhook de Make.com...`);
       try {
         const response = await fetch(makeWebhookUrl, {
           method: "POST",
@@ -139,7 +154,7 @@ async function runAutoPublisher() {
         console.warn(`⚠️ Error al enviar webhook a Make.com: ${err.message}`);
       }
     } else {
-      console.log("\nℹ️ Nota: Variable MAKE_WEBHOOK_URL no configurada aún. El payload quedó listo para Make.");
+      console.log("\nℹ️ Nota: Variable MAKE_WEBHOOK_URL no configurada en entorno local. El payload quedó listo para Make.");
     }
 
     // 6. Registrar Publicación en Google Sheets
@@ -169,5 +184,8 @@ async function runAutoPublisher() {
   }
 }
 
-// Ejecutar
-runAutoPublisher();
+if (require.main === module) {
+  runAutoPublisher();
+}
+
+module.exports = { runAutoPublisher };
