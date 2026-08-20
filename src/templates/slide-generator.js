@@ -20,7 +20,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
   const {
     authorName = "Ing. José Luis",
     authorHandle = "@joseluis_tech",
-    category = "IA & INGENIERÍA 2026",
+    category = "TECH & INGENIERÍA",
     themeKey = "midnight_cyan",
     format = "square"
   } = config;
@@ -31,7 +31,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
   const isStory = format === 'story';
   const isPortrait = format === 'portrait';
 
-  // Helper para resolver la imagen (Data URI directo o asset local)
+  // Helper para resolver la imagen
   const resolveImage = (imgSrc, fallbackFilename) => {
     if (imgSrc && imgSrc.startsWith('data:image/')) return imgSrc;
     if (imgSrc && fs.existsSync(imgSrc)) {
@@ -58,14 +58,14 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
                 <div class="cover-stat-icon">🚀</div>
                 <div class="cover-stat-text">
                   <h5>${slide.badge1 || 'Alta Escala'}</h5>
-                  <p>Arquitectura 2026</p>
+                  <p>${slide.badge1Sub || 'Arquitectura 2026'}</p>
                 </div>
               </div>
               <div class="cover-stat-card">
                 <div class="cover-stat-icon">🛡️</div>
                 <div class="cover-stat-text">
                   <h5>${slide.badge2 || 'Resiliencia'}</h5>
-                  <p>Estándar Enterprise</p>
+                  <p>${slide.badge2Sub || 'Estándar Enterprise'}</p>
                 </div>
               </div>
             </div>
@@ -125,22 +125,29 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
 
     case 'impact_matrix':
     case 'metrics':
+      const s1Num = slide.stat1 || slide.stats?.[0]?.num || '10x';
+      const s1Desc = slide.stat1Desc || slide.stats?.[0]?.label || 'Impacto en Rendimiento';
+      const s2Num = slide.stat2 || slide.stats?.[1]?.num || '-70%';
+      const s2Desc = slide.stat2Desc || slide.stats?.[1]?.label || 'Reducción de Latencia';
+      const s3Num = slide.stat3 || slide.stats?.[2]?.num || '99.99%';
+      const s3Desc = slide.stat3Desc || slide.stats?.[2]?.label || 'Disponibilidad';
+
       bodyHtml = `
         <div>
-          <h2 class="slide-heading-large">${slide.title || 'Impacto & Métricas'}</h2>
+          <h2 class="slide-heading-large">${slide.title || 'Impacto & Métricas en Producción'}</h2>
           ${slide.subtitle ? `<p class="slide-subheading-large">${slide.subtitle}</p>` : ''}
           <div class="stats-cards-grid">
             <div class="stat-big-box">
-              <span class="stat-number-hero" style="color: ${theme.primaryAccent};">${slide.stat1 || slide.stats?.[0]?.num || '10x'}</span>
-              <p class="stat-desc-hero">${slide.stat1Desc || slide.stats?.[0]?.label || 'Impacto en Rendimiento'}</p>
+              <span class="stat-number-hero" style="color: ${theme.primaryAccent};">${s1Num}</span>
+              <p class="stat-desc-hero">${s1Desc}</p>
             </div>
             <div class="stat-big-box">
-              <span class="stat-number-hero" style="color: ${theme.secondaryAccent};">${slide.stat2 || slide.stats?.[1]?.num || '-70%'}</span>
-              <p class="stat-desc-hero">${slide.stat2Desc || slide.stats?.[1]?.label || 'Reducción de Latencia'}</p>
+              <span class="stat-number-hero" style="color: ${theme.secondaryAccent};">${s2Num}</span>
+              <p class="stat-desc-hero">${s2Desc}</p>
             </div>
             <div class="stat-big-box">
-              <span class="stat-number-hero" style="color: #38BDF8;">${slide.stat3 || slide.stats?.[2]?.num || '100%'}</span>
-              <p class="stat-desc-hero">${slide.stat3Desc || slide.stats?.[2]?.label || 'Disponibilidad P99'}</p>
+              <span class="stat-number-hero" style="color: #38BDF8;">${s3Num}</span>
+              <p class="stat-desc-hero">${s3Desc}</p>
             </div>
           </div>
         </div>
@@ -149,7 +156,13 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
 
     case 'process_pipeline':
     case 'pipeline':
-      const pipeImg = resolveImage(slide.image || slide.pipelineImage, 'pipeline.jpg');
+      const pipeStep1 = slide.pipeline?.[0]?.title || slide.step1 || '1. Diseño de Arquitectura & Contratos';
+      const pipeDesc1 = slide.pipeline?.[0]?.desc || slide.step1Desc || 'Delimitación de dominios, contratos de API y modelado de datos.';
+      const pipeStep2 = slide.pipeline?.[1]?.title || slide.step2 || '2. Implementación Modular & Resiliencia';
+      const pipeDesc2 = slide.pipeline?.[1]?.desc || slide.step2Desc || 'Desarrollo guiado por contexto, desacoplamiento y tipado estricto.';
+      const pipeStep3 = slide.pipeline?.[2]?.title || slide.step3 || '3. Hardening & Observabilidad P99';
+      const pipeDesc3 = slide.pipeline?.[2]?.desc || slide.step3Desc || 'Pruebas automatizadas, análisis de seguridad y monitoreo de telemetría.';
+
       bodyHtml = `
         <div>
           <h2 class="slide-heading-large">${slide.title || 'El Pipeline en 3 Fases'}</h2>
@@ -158,22 +171,22 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
             <div class="pipeline-step-item">
               <div class="pipeline-step-badge" style="background: ${theme.primaryAccent}; color: #000;">1</div>
               <div class="pipeline-step-content">
-                <h4>${slide.step1 || slide.pipeline?.[0] || '1. Diseño de Arquitectura'}</h4>
-                <p>Delimitación de dominios, contratos de API y modelado de datos.</p>
+                <h4>${pipeStep1}</h4>
+                <p>${pipeDesc1}</p>
               </div>
             </div>
             <div class="pipeline-step-item">
               <div class="pipeline-step-badge" style="background: ${theme.secondaryAccent}; color: #FFF;">2</div>
               <div class="pipeline-step-content">
-                <h4>${slide.step2 || slide.pipeline?.[1] || '2. Implementación Modular'}</h4>
-                <p>Desarrollo guiado por contexto, desacoplamiento y tipado estricto.</p>
+                <h4>${pipeStep2}</h4>
+                <p>${pipeDesc2}</p>
               </div>
             </div>
             <div class="pipeline-step-item">
               <div class="pipeline-step-badge" style="background: #38BDF8; color: #000;">3</div>
               <div class="pipeline-step-content">
-                <h4>${slide.step3 || slide.pipeline?.[2] || '3. Hardening & Observabilidad'}</h4>
-                <p>Pruebas automatizadas, análisis de seguridad y monitoreo P99.</p>
+                <h4>${pipeStep3}</h4>
+                <p>${pipeDesc3}</p>
               </div>
             </div>
           </div>
@@ -183,6 +196,10 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
 
     case 'golden_rules':
     case 'rules':
+      const r1 = slide.rules?.[0] || slide.rule1 || 'Prioriza la mantenibilidad y claridad sobre la complejidad innecesaria.';
+      const r2 = slide.rules?.[1] || slide.rule2 || 'Nunca lleves código a producción sin una suite de pruebas en verde.';
+      const r3 = slide.rules?.[2] || slide.rule3 || 'La verdadera ventaja competitiva está en el diseño de la arquitectura.';
+
       bodyHtml = `
         <div>
           <h2 class="slide-heading-large">${slide.title || '3 Reglas de Oro'}</h2>
@@ -190,15 +207,15 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
           <div class="rules-stack-grid">
             <div class="rule-card-item">
               <span class="rule-num-pill" style="color: ${theme.primaryAccent};">#1</span>
-              <p class="rule-text-content">${slide.rule1 || slide.rules?.[0] || 'La IA escribe sintaxis; el Arquitecto define límites y contratos.'}</p>
+              <p class="rule-text-content">${r1}</p>
             </div>
             <div class="rule-card-item">
               <span class="rule-num-pill" style="color: ${theme.primaryAccent};">#2</span>
-              <p class="rule-text-content">${slide.rule2 || slide.rules?.[1] || 'Nunca lleves código a producción sin una suite de pruebas en verde.'}</p>
+              <p class="rule-text-content">${r2}</p>
             </div>
             <div class="rule-card-item">
               <span class="rule-num-pill" style="color: ${theme.primaryAccent};">#3</span>
-              <p class="rule-text-content">${slide.rule3 || slide.rules?.[2] || 'La verdadera ventaja competitiva está en el diseño del sistema.'}</p>
+              <p class="rule-text-content">${r3}</p>
             </div>
           </div>
         </div>
@@ -212,15 +229,15 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
         <div class="conclusion-split-layout">
           <div class="conclusion-left">
             <div class="cover-hook-tag"><span>DEBATE & CONCLUSIÓN</span></div>
-            <h2 class="cover-title-big" style="font-size: 42px; margin-bottom: 20px;">${slide.title || 'El Futuro de la Ingeniería'}</h2>
+            <h2 class="cover-title-big" style="font-size: 38px; margin-bottom: 18px;">${slide.title || 'El Futuro de la Ingeniería'}</h2>
             <div class="cta-question-card" style="border-left: 4px solid ${theme.primaryAccent};">
-              <h3>${slide.question || '¿Y en tu empresa?'}</h3>
-              <p>${slide.questionDesc || '¿Ya están adoptando estas prácticas o prefieren el flujo tradicional? Déjame tu opinión en los comentarios.'}</p>
+              <h3>${slide.question || '¿Cómo lo abordan en tu empresa?'}</h3>
+              <p>${slide.questionDesc || 'Comparte tu experiencia, patrones de diseño o debate en la sección de comentarios.'}</p>
             </div>
             <div class="cta-actions-bar">
-              <div class="action-item"><span class="action-icon">💬</span><span>Comenta tu experiencia</span></div>
-              <div class="action-item"><span class="action-icon">💾</span><span>Guarda para después</span></div>
-              <div class="action-item"><span class="action-icon">🔄</span><span>Comparte con tu equipo</span></div>
+              <div class="action-item"><span class="action-icon">💬</span><span>Comenta tu experiencia técnica</span></div>
+              <div class="action-item"><span class="action-icon">💾</span><span>Guarda para tu equipo de ingeniería</span></div>
+              <div class="action-item"><span class="action-icon">🔄</span><span>Comparte con otros desarrolladores</span></div>
             </div>
           </div>
           ${futureImg ? `
@@ -350,7 +367,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     /* Tipografías base */
     .slide-heading-large {
       font-family: 'Syne', sans-serif;
-      font-size: 46px;
+      font-size: 44px;
       font-weight: 800;
       line-height: 1.15;
       letter-spacing: -0.02em;
@@ -359,11 +376,11 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .slide-subheading-large {
-      font-size: 22px;
+      font-size: 21px;
       color: var(--text-muted);
       font-weight: 400;
       line-height: 1.45;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
 
     /* Cover Hero Layout (2 Columnas) */
@@ -389,7 +406,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
 
     .cover-title-big {
       font-family: 'Syne', sans-serif;
-      font-size: 48px;
+      font-size: 46px;
       font-weight: 800;
       line-height: 1.12;
       color: #FFFFFF;
@@ -398,10 +415,10 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .cover-subtitle-big {
-      font-size: 21px;
+      font-size: 20px;
       color: var(--text-muted);
       line-height: 1.45;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
 
     .cover-stats-row {
@@ -421,7 +438,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .cover-stat-icon { font-size: 26px; }
-    .cover-stat-text h5 { font-size: 16px; font-weight: 700; color: #FFFFFF; }
+    .cover-stat-text h5 { font-size: 15px; font-weight: 700; color: #FFFFFF; }
     .cover-stat-text p { font-size: 12px; color: var(--text-muted); }
 
     .cover-image-container, .conclusion-image-container {
@@ -450,7 +467,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     .contrast-box {
       background: var(--bg-card);
       border-radius: 18px;
-      padding: 30px 26px;
+      padding: 28px 24px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       position: relative;
     }
@@ -464,7 +481,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .contrast-badge-pill {
@@ -477,9 +494,9 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .contrast-title-main {
-      font-size: 23px;
+      font-size: 22px;
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .contrast-bullet-list {
@@ -492,7 +509,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      font-size: 17px;
+      font-size: 16px;
       color: var(--text-main);
       line-height: 1.4;
     }
@@ -513,7 +530,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
       background: var(--bg-card);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 18px;
-      padding: 40px 24px;
+      padding: 36px 20px;
       text-align: center;
       display: flex;
       flex-direction: column;
@@ -523,7 +540,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
 
     .stat-number-hero {
       font-family: 'Syne', sans-serif;
-      font-size: 58px;
+      font-size: 54px;
       font-weight: 800;
       line-height: 1;
       margin-bottom: 14px;
@@ -531,7 +548,7 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .stat-desc-hero {
-      font-size: 17px;
+      font-size: 16px;
       color: var(--text-muted);
       line-height: 1.35;
     }
@@ -546,64 +563,65 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     .pipeline-step-item {
       display: flex;
       align-items: center;
-      gap: 22px;
+      gap: 20px;
       background: var(--bg-card);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 20px 26px;
+      padding: 18px 24px;
     }
 
     .pipeline-step-badge {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 800;
       flex-shrink: 0;
     }
 
     .pipeline-step-content h4 {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 700;
       color: #FFFFFF;
       margin-bottom: 4px;
     }
 
     .pipeline-step-content p {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-muted);
+      line-height: 1.4;
     }
 
     /* Rules Stack */
     .rules-stack-grid {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
     .rule-card-item {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 22px;
       background: var(--bg-card);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 24px 28px;
+      padding: 22px 26px;
     }
 
     .rule-num-pill {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       flex-shrink: 0;
     }
 
     .rule-text-content {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
       color: #FFFFFF;
       line-height: 1.4;
@@ -620,18 +638,19 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     .cta-question-card {
       background: var(--bg-card);
       border-radius: 14px;
-      padding: 22px 24px;
-      margin-bottom: 24px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
     }
 
     .cta-question-card h3 {
-      font-size: 22px;
+      font-size: 20px;
       color: #FFFFFF;
       margin-bottom: 8px;
+      line-height: 1.3;
     }
 
     .cta-question-card p {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--text-muted);
       line-height: 1.45;
     }
@@ -646,13 +665,13 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
       display: flex;
       align-items: center;
       gap: 14px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: #FFFFFF;
     }
 
     .action-icon {
-      font-size: 22px;
+      font-size: 20px;
     }
 
     /* Footer inferior */
@@ -673,20 +692,20 @@ function generateSlideHtml(slide, index, totalSlides, config = {}) {
     }
 
     .author-avatar-chip {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       background: var(--gradient-hero);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 17px;
+      font-size: 16px;
       color: #000000;
     }
 
     .author-meta .name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #FFFFFF;
     }

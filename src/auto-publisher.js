@@ -1,8 +1,8 @@
 /**
  * ==============================================================================
- * AUTO-PUBLISHER ENGINE v2.0 (GitHub Actions Cron & Desatendido)
+ * AUTO-PUBLISHER ENGINE v3.0 (GitHub Actions Cron & Desatendido)
  * ==============================================================================
- * Ciclo integral autónomo:
+ * Ciclo integral autónomo con contenido dinámico profundo:
  * 1. Investigación del tema tecnológico más importante del día (o manual).
  * 2. Rotación dinámica de temas visuales (Midnight Cyan, Emerald, Amber, Violet...).
  * 3. Generación de imágenes e ilustraciones conceptuales 3D con IA.
@@ -68,9 +68,9 @@ async function runAutoPublisher() {
       .split(',')
       .map(s => s.trim().toLowerCase());
 
-    const format = process.env.PUBLISH_FORMAT || "square"; // 1:1 Cuadrado por defecto
+    const format = process.env.PUBLISH_FORMAT || "square";
 
-    // 5. Construir Estructura de Diapositivas con el Guion Técnico
+    // 5. Construir Estructura de Diapositivas con el Guion Técnico Profundo
     const structuredSlides = [
       {
         type: "cover_hero",
@@ -78,7 +78,8 @@ async function runAutoPublisher() {
         subtitle: topicData.subtitle,
         hook: topicData.hook,
         badge1: topicData.stats?.[0]?.num ? `${topicData.stats[0].num} ${topicData.stats[0].label}` : "Alta Escala",
-        badge2: "Estándar 2026"
+        badge2: "Estándar 2026",
+        role: "hero"
       },
       {
         type: "split_contrast",
@@ -87,7 +88,8 @@ async function runAutoPublisher() {
         badTitle: topicData.badTitle,
         badItems: topicData.badItems,
         goodTitle: topicData.goodTitle,
-        goodItems: topicData.goodItems
+        goodItems: topicData.goodItems,
+        role: "architecture"
       },
       {
         type: "impact_matrix",
@@ -98,30 +100,30 @@ async function runAutoPublisher() {
         stat2: topicData.stats?.[1]?.num || "-70%",
         stat2Desc: topicData.stats?.[1]?.label || "Latencia P99",
         stat3: topicData.stats?.[2]?.num || "99.99%",
-        stat3Desc: topicData.stats?.[2]?.label || "Disponibilidad"
+        stat3Desc: topicData.stats?.[2]?.label || "Disponibilidad",
+        role: "matrix"
       },
       {
         type: "process_pipeline",
         title: "El Pipeline en 3 Fases",
         subtitle: "Guía de implementación paso a paso:",
-        step1: topicData.pipeline?.[0] || "1. Arquitectura & Contratos",
-        step2: topicData.pipeline?.[1] || "2. Implementación Modular",
-        step3: topicData.pipeline?.[2] || "3. Hardening & Observabilidad"
+        pipeline: topicData.pipeline,
+        role: "pipeline"
       },
       {
         type: "golden_rules",
         title: "3 Reglas de Oro para Líderes Tech",
         subtitle: "Principios innegociables para ingeniería de alto nivel:",
-        rule1: topicData.rules?.[0] || "1. La IA escribe; el Arquitecto responde por los contratos.",
-        rule2: topicData.rules?.[1] || "2. Cero código en producción sin tests en verde.",
-        rule3: topicData.rules?.[2] || "3. La ventaja competitiva está en el diseño del sistema."
+        rules: topicData.rules,
+        role: "rules"
       },
       {
         type: "summary_cta",
         title: "Conclusión & Debate Técnico",
         subtitle: "La habilidad clave es diseñar arquitecturas resilientes:",
         question: topicData.question,
-        questionDesc: "Comparte tu experiencia o debate en la sección de comentarios."
+        questionDesc: "Comparte tu experiencia o debate en la sección de comentarios.",
+        role: "future"
       }
     ];
 
