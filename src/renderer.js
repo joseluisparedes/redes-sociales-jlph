@@ -3,11 +3,13 @@ const { PDFDocument } = require('pdf-lib');
 const fs = require('fs-extra');
 const path = require('path');
 const { generateSlideHtml } = require('./templates/slide-generator');
+const { ImageGenerator } = require('./image-generator');
+const { getTheme, getRandomTheme } = require('./templates/themes');
 
 class CarouselRenderer {
   constructor(options = {}) {
     this.outputDir = options.outputDir || path.join(__dirname, '../output');
-    this.cssPath = path.join(__dirname, 'templates/styles.css');
+    this.imageGenerator = new ImageGenerator();
   }
 
   async render(carouselData) {
@@ -15,18 +17,43 @@ class CarouselRenderer {
     const targetFolder = path.join(this.outputDir, slug);
     await fs.ensureDir(targetFolder);
 
-    const isStory = carouselData.format === 'story';
-    const isPortrait = carouselData.format === 'portrait';
+    const format = carouselData.format || 'square';
+    const isStory = format === 'story';
+    const isPortrait = format === 'portrait';
+    const isLandscape = format === 'landscape';
     
     // Proporciones exactas
-    const width = 1080;
-    let height = 1080; // Default 1:1 / 3:3 Square para Feed de LinkedIn, IG y FB
-    if (isStory) height = 1920; // 9:16 para Historias
-    if (isPortrait) height = 1350; // 4:5 Vertical
+    let width = 1080;
+    let height = 1080; // 1:1 Cuadrado por defecto (Feed LinkedIn, IG, FB)
+    if (isStory) { width = 1080; height = 1920; }     // 9:16 Historia / Reel
+    if (isPortrait) { width = 1080; height = 1350; }  // 4:5 Vertical Feed
+    if (isLandscape) { width = 1920; height = 1080; } // 16:9 Panorámico
+
+    // Seleccionar o rotar tema visual dinámico
+    const themeKey = carouselData.themeKey || 'midnight_cyan';
+    const activeTheme = getTheme(themeKey);
 
     console.log(`\n🎨 Iniciando renderizado: "${carouselData.title}"`);
-    console.log(`📐 Proporción: ${isStory ? '9:16 Historia (1080x1920)' : isPortrait ? '4:5 Vertical (1080x1350)' : '3:3 / 1:1 Cuadrado (1080x1080)'}`);
+    console.log(`🎭 Tema Visual: ${activeTheme.name}`);
+    console.log(`📐 Proporción: ${width}x${height} (${format})`);
     console.log(`📁 Carpeta de salida: ${targetFolder}\n`);
+
+    // 1. Generar o resolver imágenes 3D de apoyo conceptual para las diapositivas
+    console.log(`🖼️ Generando arte conceptual 3D de apoyo con IA...`);
+    const heroImageUri = await this.imageGenerator.getOrGenerateImage(carouselData.title, 'hero', activeTheme.primaryAccent);
+    const archImageUri = await this.imageGenerator.getOrGenerateImage(carouselData.title, 'architecture', activeTheme.primaryAccent);
+    const pipeImageUri = await this.imageGenerator.getOrGenerateImage(carouselData.title, 'pipeline', activeTheme.primaryAccent);
+    const futureImageUri = await this.imageGenerator.getOrGenerateImage(carouselData.title, 'future', activeTheme.primaryAccent);
+
+    // Inyectar las imágenes resueltas en los slides correspondientes
+    const slidesWithImages = (carouselData.slides || []).map((s, idx) => {
+      let img = s.image;
+      if (s.type === 'cover_hero' || s.type === 'cover' || idx === 0) img = s.image || heroImageUri;
+      if (s.type === 'split_contrast' || s.type === 'comparison') img = s.image || archImageUri;
+      if (s.type === 'process_pipeline' || s.type === 'pipeline') img = s.image || pipeImageUri;
+      if (s.type === 'summary_cta' || s.type === 'conclusion' || idx === carouselData.slides.length - 1) img = s.image || futureImageUri;
+      return { ...s, image: img };
+    });
 
     const browser = await chromium.launch({
       headless: true,
@@ -39,46 +66,36 @@ class CarouselRenderer {
     });
 
     const page = await context.newPage();
-    const slides = carouselData.slides;
     const generatedImages = [];
 
-    // Read CSS content to inject directly
-    const cssContent = await fs.readFile(this.cssPath, 'utf8');
-
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
-      const slideNum = String(i + 1).padStart(2, '0');
-      const filename = `slide_${slideNum}.png`;
-      const imagePath = path.join(targetFolder, filename);
-
-      let html = generateSlideHtml(slide, i, slides.length, {
+    for (let i = 0; i < slidesWithImages.length; i++) {
+      const slide = slidesWithImages[i];
+      const slideHtml = generateSlideHtml(slide, i, slidesWithImages.length, {
         authorName: carouselData.author?.name || "Ing. José Luis",
         authorHandle: carouselData.author?.handle || "@joseluis_tech",
-        authorTitle: carouselData.author?.title || "Software Architecture & AI",
-        avatarUrl: carouselData.author?.avatarUrl,
-        category: carouselData.category || "TECH & IA 2026",
-        isStory
+        category: carouselData.category || "TECH & INGENIERÍA",
+        themeKey: themeKey,
+        format: format
       });
 
-      // Embed CSS inline
-      html = html.replace('<link rel="stylesheet" href="styles.css">', `<style>${cssContent}</style>`);
+      await page.setContent(slideHtml, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(300); // Esperar renderizado tipográfico
 
-      await page.setContent(html, { waitUntil: 'networkidle' });
-      await page.evaluateHandle('document.fonts.ready');
+      const fileName = `slide_${String(i + 1).padStart(2, '0')}.png`;
+      const filePath = path.join(targetFolder, fileName);
 
-      const slideElement = await page.$('.slide');
-      await slideElement.screenshot({
-        path: imagePath,
+      await page.screenshot({
+        path: filePath,
         type: 'png'
       });
 
-      console.log(`  ✓ Slide ${slideNum}/${slides.length} renderizada -> ${filename}`);
-      generatedImages.push(imagePath);
+      generatedImages.push(filePath);
+      console.log(`  ✓ Slide ${String(i + 1).padStart(2, '0')}/${slidesWithImages.length} renderizada -> ${fileName}`);
     }
 
     await browser.close();
 
-    // Compile PDF for LinkedIn (only if not story)
+    // Compilar PDF para LinkedIn (únicamente si no es historia 9:16)
     let pdfPath = null;
     if (!isStory) {
       pdfPath = path.join(targetFolder, `${slug}_linkedin.pdf`);
@@ -86,7 +103,7 @@ class CarouselRenderer {
       console.log(`  ✓ Documento PDF para LinkedIn generado -> ${path.basename(pdfPath)}`);
     }
 
-    // Write Captions file
+    // Generar archivo de copys y hashtags para redes sociales
     const captionsContent = this.generateCaptionsFile(carouselData);
     const captionsPath = path.join(targetFolder, 'copys_redes_sociales.md');
     await fs.writeFile(captionsPath, captionsContent, 'utf8');
@@ -100,7 +117,9 @@ class CarouselRenderer {
       slides: generatedImages,
       pdf: pdfPath,
       pdfPath: pdfPath,
-      captions: captionsPath
+      captions: captionsPath,
+      themeKey: themeKey,
+      format: format
     };
   }
 
@@ -131,41 +150,29 @@ class CarouselRenderer {
 
 ## 💼 Copy para LinkedIn (Publicar junto al archivo PDF)
 \`\`\`text
-${data.captions?.linkedin || `El "Vibecoding" está cambiando cómo construimos software, pero... ¿es viable en empresas reales? 🤖⚡
+${data.captions?.linkedin || `¿Cómo resolver "${data.title}" con estándares de alta escala? 🚀
 
-Popularizado por Andrej Karpathy, el Vibecoding consiste en programar guiado casi 100% por prompts e intuición.
+En este carrusel técnico desglosamos las decisiones de arquitectura, los trade-offs y las 3 reglas de oro para implementar en producción.
 
-Para prototipar y validar MVPs en 48 horas es una revolución absoluta. Pero cuando entra a producción en sistemas corporativos, la deuda técnica puede explotar en meses si no hay arquitectura detrás.
+📌 Desliza el documento adjunto para ver el blueprint completo.
 
-📌 Desliza este carrusel para ver:
-- El choque: Vibecoding vs Ingeniería Rigurosa
-- Métricas de impacto real en empresas
-- El modelo híbrido para adoptarlo con seguridad
-
-¿En tu empresa ya usan herramientas de IA para codificar o siguen el flujo tradicional? Te leo en los comentarios. 👇
-
-#Vibecoding #SoftwareEngineering #ArtificialIntelligence #SystemDesign #TechLeadership #DevOps #Innovation`}
+#SoftwareArchitecture #Engineering #SystemDesign #TechLeadership #DevOps`}
 \`\`\`
 
 ---
 
-## 📸 Copy para Instagram / Facebook (Publicar con las imágenes cuadradas 1:1)
+## 📸 Copy para Instagram / Facebook (Publicar con las imágenes)
 \`\`\`text
-${data.captions?.instagram || `¿El fin de los programadores o la era del Arquitecto con IA? 🔥
+${data.captions?.instagram || `${data.title} ⚡
 
-El Vibecoding promete crear aplicaciones en minutos, pero en empresas serias las reglas son distintas.
+Guía visual paso a paso para líderes técnicos e ingenieros de software.
 
-Desliza para ver la guía visual ➔
-
-1️⃣ ¿Qué es el Vibecoding?
-2️⃣ El impacto real en productividad vs deuda técnica
-3️⃣ El pipeline híbrido para no romper producción
-4️⃣ 3 Reglas de oro para ingenieros
+Desliza para ver el desglose ➔
 
 💾 Guarda este post para compartirlo con tu equipo técnico.
-👉 Sígueme en @${(data.author?.handle || 'tu_usuario').replace('@', '')} para más análisis tech diarios.
+👉 Sígueme en @${(data.author?.handle || 'joseluis_tech').replace('@', '')} para más análisis tech diarios.
 
-#vibecoding #ia #ingenieriadesistemas #programadores #tecnologia #startups #desarrolloweb #software`}
+#ingenieriadesistemas #arquitectura #programacion #tech #desarrolloweb`}
 \`\`\`
 `;
   }
