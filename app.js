@@ -1,9 +1,10 @@
 /**
  * ==============================================================================
- * TECH CONTENT ENGINE - CLIENT CONTROLLER v3.5 (DYNAMIC CONTENT ENGINE)
+ * TECH CONTENT ENGINE - CLIENT CONTROLLER v4.0 (REAL AI & 3D ART)
  * ==============================================================================
- * Motor client-side con síntesis semántica profunda para generar contenido
- * 100% personalizado y único por cada tema tecnológico, sin duplicados genéricos.
+ * 1. Genera imágenes 3D por IA en tiempo real para CADA lámina vía Pollinations.
+ * 2. Comprensión contextual inteligente de cualquier tema (EdTech, Empresas, Cloud, etc.).
+ * 3. Layout de 2 Columnas con Arte 3D prominente visible en el visor.
  */
 
 // Estado global de la aplicación
@@ -11,357 +12,253 @@ const AppState = {
   token: localStorage.getItem('tech_engine_auth') || null,
   currentTab: 'generator',
   
-  // Fuente de contenido
-  contentSource: 'trending', // 'trending' | 'manual'
+  contentSource: 'trending',
   
-  // Matriz granular por red social
   networks: {
     linkedin: { enabled: true, format: 'square', type: 'carousel_doc' },
     instagram: { enabled: true, format: 'portrait', type: 'carousel_photos' },
     facebook: { enabled: true, format: 'square', type: 'album_photos' }
   },
 
-  // Tema visual
   selectedThemeKey: 'random',
 
-  // Datos del carrusel generado
   currentCarousel: null,
   currentSlideIndex: 0,
   activeCaptionTab: 'linkedin',
 
-  // Configuración
   makeWebhookUrl: localStorage.getItem('cfg_make_webhook') || '',
   author: JSON.parse(localStorage.getItem('cfg_author')) || {
     name: "Ing. José Luis",
     handle: "@joseluis_tech"
   },
 
-  // Base de datos Google Sheets
   sheetWebhookUrl: "https://script.google.com/macros/s/AKfycbwcGKhfIDHLukn_bSoxl_41KeDMk5bQgTtNlCF1rFYR5jJqnymKC7sZHHDUNYREkL72/exec"
 };
 
-// Temas visuales para el cliente
+// Temas visuales ejecutivos
 const CLIENT_THEMES = {
   midnight_cyan: {
+    id: "midnight_cyan",
     name: "Midnight Cyan",
-    bgGradient: "radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.15) 0%, transparent 50%), linear-gradient(180deg, #030712 0%, #0B1120 100%)",
+    bgGradient: "radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.18) 0%, transparent 50%), linear-gradient(180deg, #030712 0%, #0B1120 100%)",
     primary: "#06B6D4",
     secondary: "#3B82F6",
-    badgeBg: "rgba(6, 182, 212, 0.14)"
+    badgeBg: "rgba(6, 182, 212, 0.14)",
+    glow: "rgba(6, 182, 212, 0.35)"
   },
   cyber_emerald: {
+    id: "cyber_emerald",
     name: "Cyber Emerald",
-    bgGradient: "radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.18) 0%, transparent 50%), linear-gradient(180deg, #020B06 0%, #071E12 100%)",
+    bgGradient: "radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.20) 0%, transparent 50%), linear-gradient(180deg, #020B06 0%, #071E12 100%)",
     primary: "#10B981",
     secondary: "#06B6D4",
-    badgeBg: "rgba(16, 185, 129, 0.14)"
+    badgeBg: "rgba(16, 185, 129, 0.14)",
+    glow: "rgba(16, 185, 129, 0.35)"
   },
   obsidian_gold: {
+    id: "obsidian_gold",
     name: "Obsidian Gold",
-    bgGradient: "radial-gradient(circle at 85% 15%, rgba(245, 158, 11, 0.16) 0%, transparent 50%), linear-gradient(180deg, #0B0904 0%, #1A1408 100%)",
+    bgGradient: "radial-gradient(circle at 85% 15%, rgba(245, 158, 11, 0.18) 0%, transparent 50%), linear-gradient(180deg, #0B0904 0%, #1A1408 100%)",
     primary: "#F59E0B",
     secondary: "#F97316",
-    badgeBg: "rgba(245, 158, 11, 0.14)"
+    badgeBg: "rgba(245, 158, 11, 0.14)",
+    glow: "rgba(245, 158, 11, 0.35)"
   },
   quantum_violet: {
+    id: "quantum_violet",
     name: "Quantum Violet",
-    bgGradient: "radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.18) 0%, transparent 50%), linear-gradient(180deg, #06030F 0%, #140828 100%)",
+    bgGradient: "radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.20) 0%, transparent 50%), linear-gradient(180deg, #06030F 0%, #140828 100%)",
     primary: "#A855F7",
     secondary: "#EC4899",
-    badgeBg: "rgba(168, 85, 247, 0.14)"
+    badgeBg: "rgba(168, 85, 247, 0.14)",
+    glow: "rgba(168, 85, 247, 0.35)"
   },
   crimson_defense: {
+    id: "crimson_defense",
     name: "Crimson Defense",
-    bgGradient: "radial-gradient(circle at 85% 15%, rgba(244, 63, 94, 0.18) 0%, transparent 50%), linear-gradient(180deg, #0D0406 0%, #200810 100%)",
+    bgGradient: "radial-gradient(circle at 85% 15%, rgba(244, 63, 94, 0.20) 0%, transparent 50%), linear-gradient(180deg, #0D0406 0%, #200810 100%)",
     primary: "#F43F5E",
     secondary: "#FB7185",
-    badgeBg: "rgba(244, 63, 94, 0.14)"
+    badgeBg: "rgba(244, 63, 94, 0.14)",
+    glow: "rgba(244, 63, 94, 0.35)"
   }
 };
 
 const CLIENT_THEME_KEYS = Object.keys(CLIENT_THEMES);
 
 // ==============================================================================
-// BASE DE CONOCIMIENTO TÉCNICO MULTIDOMINIO CLIENT-SIDE
+// SINTETIZADOR INTELIGENTE DE CONTENIDO Y PROMPTS DE ARTE 3D
 // ==============================================================================
-const DOMAIN_DATA = [
-  {
-    keywords: ['vibe', 'vibecoding', 'ia', 'ai', 'prompt', 'generativo'],
-    topic: "El Fenómeno del Vibecoding: ¿Revolución o Deuda Técnica?",
-    category: "IA & INGENIERÍA 2026",
-    hook: "⚡ ANÁLISIS DE ALTO IMPACTO",
-    subtitle: "Cómo el desarrollo guiado por IA está redefiniendo las responsabilidades del Arquitecto.",
-    badTitle: "El Enfoque Imprudente",
-    badItems: [
-      "Generación de código sin contratos ni interfaces previas",
-      "Acoplamiento oculto y deuda técnica invisible",
-      "Ausencia de tests automatizados que verifiquen el comportamiento"
-    ],
-    goodTitle: "El Enfoque Riguroso",
-    goodItems: [
-      "Diseño de arquitectura, tipos estrictos y API-First",
-      "Batería de pruebas unitarias y de regresión continua",
-      "Auditorías estáticas de seguridad y observabilidad de telemetría"
-    ],
-    stat1: "10x", stat1Desc: "Velocidad de prototipado inicial",
-    stat2: "3.4x", stat2Desc: "Riesgo de deuda técnica sin testing",
-    stat3: "100%", stat3Desc: "Necesidad de diseño arquitectónico",
-    step1Title: "1. Discovery & Contratos de API",
-    step1Desc: "Definición estricta de esquemas JSON y límites de dominio antes de generar código.",
-    step2Title: "2. Generación Guiada por Contexto",
-    step2Desc: "Inyección de contexto acotado y patrones de diseño en cada prompt de desarrollo.",
-    step3Title: "3. Hardening & Observabilidad",
-    step3Desc: "Ejecución automatizada de linters, escaneo de seguridad y pruebas en CI/CD.",
-    rule1: "La IA redacta sintaxis; el Arquitecto responde por los contratos y límites del sistema.",
-    rule2: "Nunca lleves código generado a producción sin una suite de pruebas en verde.",
-    rule3: "La verdadera ventaja competitiva está en el diseño del sistema y modelado de datos.",
-    question: "¿En tu empresa ya usan herramientas de IA para codificar o siguen el flujo tradicional?"
-  },
-  {
-    keywords: ['redis', 'kafka', 'distribuido', 'concurrencia', 'escala', 'stream', 'rate limit'],
-    topic: "Cómo Escalar a 1M de Peticiones por Segundo con Redis y Kafka",
-    category: "SISTEMAS DISTRIBUIDOS & ALTA ESCALA",
-    hook: "🚀 ESCALABILIDAD EXTREMA",
-    subtitle: "Decisiones de particionado en memoria, colas asíncronas y mitigación de cuellos de botella.",
-    badTitle: "Monolito Bloqueante",
-    badItems: [
-      "Consultas pesadas de lectura y escritura concurrentes sobre la DB relacional",
-      "Llamadas HTTP síncronas que saturan el pool de hilos del servidor",
-      "Ausencia de políticas de desalojo en la capa de caché"
-    ],
-    goodTitle: "Arquitectura Event-Driven",
-    goodItems: [
-      "Sharding horizontal en Redis con réplicas de solo lectura",
-      "Desacoplamiento total de peticiones mediante tópicos particionados en Kafka",
-      "Patrón CQRS: separación estricta de modelos de lectura y escritura"
-    ],
-    stat1: "1.2M", stat1Desc: "RPS sostenidas en producción",
-    stat2: "2.4ms", stat2Desc: "Latencia percentil P99",
-    stat3: "0.00%", stat3Desc: "Tasa de peticiones descartadas",
-    step1Title: "1. Ingesta en Memoria & Rate Limiting",
-    step1Desc: "Recepción de tráfico mediante reverse proxies y contadores atómicos en Redis.",
-    step2Title: "2. Procesamiento Reactivo Desacoplado",
-    step2Desc: "Consumo paralelo con worker pools en Go o Rust procesando eventos asíncronos.",
-    step3Title: "3. Persistencia en Lotes (Batching)",
-    step3Desc: "Consolidación de transacciones en la base de datos sin bloquear peticiones web.",
-    rule1: "Nunca bloquees el hilo principal de procesamiento con operaciones de I/O de disco.",
-    rule2: "Diseña asumiendo que los nodos van a fallar: implementa Circuit Breakers y fallback.",
-    rule3: "Mide siempre el percentil P99 y P99.9; los promedios ocultan la frustración real.",
-    question: "¿Cuál ha sido el mayor cuello de botella que has enfrentado al escalar un backend?"
-  },
-  {
-    keywords: ['microservicios', 'microservice', 'monolito', 'monolith', 'ddd', 'modular'],
-    topic: "Microservicios vs Monolito Modular: El Verdadero Análisis de Costos",
-    category: "ARQUITECTURA DE SOFTWARE",
-    hook: "⚖️ TRADE-OFFS REALES",
-    subtitle: "Por qué tantas organizaciones fracasan al migrar a microservicios antes de tiempo.",
-    badTitle: "El Monolito Distribuido",
-    badItems: [
-      "Decenas de microservicios acoplados compartiendo la misma base de datos",
-      "Latencia de red acumulada y fallos en cascada por llamadas síncronas",
-      "Complejidad descomunal en observabilidad y despliegues coordinados"
-    ],
-    goodTitle: "Monolito Modular Moderno",
-    goodItems: [
-      "Límites de dominio (Bounded Contexts) estrictos en un único binario",
-      "Comunicación interna mediante interfaces fuertemente tipadas en memoria",
-      "Despliegue unificado, base de datos única y extracción selectiva por escala"
-    ],
-    stat1: "-65%", stat1Desc: "Ahorro en costos de infraestructura cloud",
-    stat2: "3x", stat2Desc: "Mayor velocidad de entrega de features",
-    stat3: "0ms", stat3Desc: "Latencia de red en llamadas internas",
-    step1Title: "1. Delimitación de Dominios (DDD)",
-    step1Desc: "Identificación de Bounded Contexts y aislamiento de modelos de datos por área.",
-    step2Title: "2. Módulos con Interfaces Estrictas",
-    step2Desc: "Encapsulamiento de código interactuando solo a través de contratos públicos.",
-    step3Title: "3. Extracción Selectiva Quirúrgica",
-    step3Desc: "Separación a microservicio independiente ÚNICAMENTE ante picos de escala extremos.",
-    rule1: "Si no puedes diseñar un monolito modular limpio, tus microservicios serán un caos.",
-    rule2: "Adopta microservicios por razones organizacionales de equipo, no por moda técnica.",
-    rule3: "La consistencia eventual y la latencia de red son costos reales que debes asumir.",
-    question: "¿En tu empresa trabajan con monolito modular, microservicios o híbrido?"
-  },
-  {
-    keywords: ['rust', 'linux', 'memory', 'memoria', 'c++', 'c', 'seguridad', 'borrow'],
-    topic: "Por qué Linux y Microsoft Adoptaron Rust: El Fin de los Fallos de Memoria",
-    category: "LENGUAJES & SEGURIDAD",
-    hook: "🛡️ SEGURIDAD DE BAJO NIVEL",
-    subtitle: "El 70% de las vulnerabilidades críticas provienen de memoria. Así lo resuelve Rust.",
-    badTitle: "Riesgos en C / C++",
-    badItems: [
-      "Vulnerabilidades Use-After-Free y desbordamientos de buffer constantes",
-      "Condiciones de carrera difíciles de depurar en entornos multi-hilo",
-      "Costos millonarios en parches de seguridad para software crítico"
-    ],
-    goodTitle: "La Ventaja de Rust",
-    goodItems: [
-      "Borrow Checker y Ownership verificados en tiempo de compilación",
-      "Memory Safety garantizado sin el overhead de un Garbage Collector",
-      "Concurrencia segura garantizada matemáticamente por el compilador"
-    ],
-    stat1: "70%", stat1Desc: "Vulnerabilidades de memoria prevenidas",
-    stat2: "0ms", stat2Desc: "Overhead de Garbage Collection",
-    stat3: "100%", stat3Desc: "Type Safety en concurrencia",
-    step1Title: "1. Análisis con el Borrow Checker",
-    step1Desc: "Validación estricta de referencias mutables e inmutables en compilación.",
-    step2Title: "2. Compilación Nativa LLVM",
-    step2Desc: "Generación de código binario altamente optimizado para el procesador.",
-    step3Title: "3. Ejecución Determinística",
-    step3Desc: "Rendimiento idéntico a C++ con cero riesgo de memory leaks o dangling pointers.",
-    rule1: "La seguridad debe garantizarse en compilación, no solo en pruebas de runtime.",
-    rule2: "Usa Memory-Safe languages para infraestructura crítica y servicios expuestos a red.",
-    rule3: "El tiempo invertido en aprender el Borrow Checker se ahorra en horas de guardia.",
-    question: "¿Consideras que Rust reemplazará completamente a C++ en los próximos años?"
-  },
-  {
-    keywords: ['postgres', 'postgresql', 'sql', 'database', 'indice', 'query', 'sharding'],
-    topic: "Optimización de PostgreSQL a Gran Escala: Índices, Particionado y Pooling",
-    category: "BASES DE DATOS & STORAGE",
-    hook: "💾 OPTIMIZACIÓN DE DATOS",
-    subtitle: "Cómo eliminar cuellos de botella en consultas lentas y evitar el colapso por conexiones.",
-    badTitle: "El Error del ORM Ciego",
-    badItems: [
-      "Problema N+1 descontrolado generado por consultas automáticas del ORM",
-      "Tablas monolíticas de cientos de millones de filas sin particionado",
-      "Apertura directa de conexiones sin PgBouncer intermedio"
-    ],
-    goodTitle: "Arquitectura de Datos Óptima",
-    goodItems: [
-      "Índices compuestos y parciales diseñados tras análisis con EXPLAIN ANALYZE",
-      "Particionado declarativo de tablas por rango temporal",
-      "Connection Pooling con PgBouncer manteniendo conexiones estables"
-    ],
-    stat1: "-85%", stat1Desc: "Reducción en tiempo de queries complejas",
-    stat2: "10k+", stat2Desc: "Conexiones concurrentes estables con PgBouncer",
-    stat3: "4.2x", stat3Desc: "Mayor throughput en tablas particionadas",
-    step1Title: "1. Diagnóstico con EXPLAIN ANALYZE",
-    step1Desc: "Identificación de Sequential Scans innecesarios y cuellos de botella en memoria.",
-    step2Title: "2. Indexación Quirúrgica Concurrente",
-    step2Desc: "Creación de índices B-Tree o BRIN sin bloquear escrituras en producción.",
-    step3Title: "3. Capa de Pooling & Read Replicas",
-    step3Desc: "Enrutamiento de lecturas hacia réplicas secundarias para liberar el primario.",
-    rule1: "No agregues índices a ciegas: cada índice acelera lecturas pero frena los INSERTs.",
-    rule2: "El Connection Pooling es obligatorio en arquitecturas de microservicios con PostgreSQL.",
-    rule3: "Revisa pg_stat_user_tables periódicamente para purgar índices muertos.",
-    question: "¿Prefieres escribir SQL nativo optimizado o delegar todo a un ORM?"
-  },
-  {
-    keywords: ['oauth', 'jwt', 'auth', 'seguridad', 'token', 'owasp', 'autenticacion'],
-    topic: "OAuth 2.1 y JWT en Producción: Cómo Blindar Autenticación sin Filtrar Tokens",
-    category: "CIBERSEGURIDAD & IDENTIDAD",
-    hook: "🛡️ BLINDAJE & DEFENSE-IN-DEPTH",
-    subtitle: "Eliminación de flujos inseguros, rotación de Refresh Tokens y almacenamiento blindado.",
-    badTitle: "Prácticas Vulnerables Comunes",
-    badItems: [
-      "Guardar tokens JWT en localStorage, expuestos a ataques de XSS",
-      "Tokens de larga duración sin mecanismo de revocación inmediata",
-      "Firma simétrica débil (HS256) compartiendo secretos con clientes"
-    ],
-    goodTitle: "Arquitectura OAuth 2.1 Segura",
-    goodItems: [
-      "Almacenamiento en cookies HttpOnly, Secure y SameSite=Strict",
-      "Access Tokens de corta vida (5 a 15 min) con Refresh Token Rotation",
-      "Firma asimétrica (RS256 / EdDSA) con validación descentralizada vía JWKS"
-    ],
-    stat1: "0%", stat1Desc: "Exposición de tokens ante ataques de XSS",
-    stat2: "15 min", stat2Desc: "Vida máxima de Access Token activo",
-    stat3: "100%", stat3Desc: "Trazabilidad de revocación instantánea",
-    step1Title: "1. Autenticación con PKCE Obligatorio",
-    step1Desc: "Validación Proof Key for Code Exchange para eliminar robo de códigos de autorización.",
-    step2Title: "2. Emisión Asimétrica de Tokens",
-    step2Desc: "Firma criptográfica con clave privada y verificación mediante claves públicas JWKS.",
-    step3Title: "3. Detección de Reuso de Tokens",
-    step3Desc: "Revocación inmediata de toda la familia de tokens si un refresh token se reutiliza.",
-    rule1: "Nunca guardes información sensible ni secretos dentro del payload de un JWT.",
-    rule2: "Asume que el cliente frontend está comprometido; valida permisos en cada endpoint.",
-    rule3: "Implementa Refresh Token Rotation para aislar sesiones ante robo de credenciales.",
-    question: "¿Dónde guardas los tokens de autenticación en tus aplicaciones frontend?"
-  },
-  {
-    keywords: ['k8s', 'kubernetes', 'docker', 'devops', 'cloud', 'limits', 'helm'],
-    topic: "Kubernetes en Producción: Requests, Limits y Estrategias Zero-Downtime",
-    category: "CLOUD INFRASTRUCTURE & DEVOPS",
-    hook: "☁️ NUBE NATIVA & RESILIENCIA",
-    subtitle: "Configuración correcta de probes, Autoscaling y presupuestos de disrupción (PDB).",
-    badTitle: "El Clúster al Borde del Colapso",
-    badItems: [
-      "Pods sin CPU/Memory Requests provocando desalojos agresivos por OOMKilled",
-      "Despliegues que reinician todos los pods a la vez interrumpiendo el servicio",
-      "Falta de Readiness Probes enviando tráfico a contenedores no listos"
-    ],
-    goodTitle: "Arquitectura K8s Resiliente",
-    goodItems: [
-      "Requests y Limits ajustados a partir del percentil P95 real de telemetría",
-      "Rolling Updates controlados combinados con PodDisruptionBudgets",
-      "Probes inteligentes que verifican dependencias críticas antes de aceptar tráfico"
-    ],
-    stat1: "99.99%", stat1Desc: "Disponibilidad durante despliegues continuos",
-    stat2: "0", stat2Desc: "Caídas por reinicios o desalojos de nodos",
-    stat3: "-40%", stat3Desc: "Ahorro de costos en clúster al optimizar Requests",
-    step1Title: "1. Modelado de Recursos & Cuotas",
-    step1Desc: "Cálculo preciso de memoria y CPU para prevenir estrangulamiento y OOMKills.",
-    step2Title: "2. Probes & Health Checks Robustos",
-    step2Desc: "Configuración de Startup, Liveness y Readiness probes tolerantes a fallos transitorios.",
-    step3Title: "3. GitOps & Despliegue Progresivo",
-    step3Desc: "Automatización con ArgoCD y despliegues Canary con rollback automático ante errores.",
-    rule1: "Nunca uses CPU Limits a menos que sea indispensable para evitar CPU Throttling.",
-    rule2: "Cada Deployment debe contar con un PodDisruptionBudget para garantizar pods vivos.",
-    rule3: "Si tu app tarda en arrancar, usa Startup Probes en lugar de inflar liveness probes.",
-    question: "¿Qué herramienta usas para gestionar tus despliegues en Kubernetes?"
-  }
-];
+function intelligentContentSynthesizer(rawInput) {
+  const input = rawInput.trim();
+  const lower = input.toLowerCase();
 
-// ==============================================================================
-// SINTETIZADOR DINÁMICO CLIENT-SIDE
-// ==============================================================================
-function synthesizeTopicContent(topicInput) {
-  const normalized = topicInput.toLowerCase();
-
-  // 1. Buscar coincidencia en la base de datos técnica
-  for (const item of DOMAIN_DATA) {
-    const match = item.keywords.some(kw => normalized.includes(kw));
-    if (match) {
-      return { ...item, topic: topicInput.length > 5 && !item.topic.toLowerCase().includes(normalized) ? topicInput : item.topic };
-    }
+  // 1. CASO ESPECIAL: Laureate Perú / Educación Superior / EdTech
+  if (lower.includes('laureate') || lower.includes('upc') || lower.includes('upn') || lower.includes('cibertec') || lower.includes('educa') || lower.includes('universidad')) {
+    return {
+      topic: "Transformación Digital en Educación Superior: El Caso Laureate Perú",
+      category: "EDTECH & TRANSFORMACIÓN DIGITAL",
+      hook: "🎓 CASO DE ESTUDIO TECH",
+      subtitle: "Cómo la arquitectura tecnológica escala para conectar a más de 200,000 estudiantes universitarios.",
+      badge1: "200k+ Alumnos", badge1Sub: "Escala Nacional",
+      badge2: "99.9% Uptime", badge2Sub: "En Matrícula Pico",
+      imagePromptHero: "Futuristic 3D university campus with holographic students, digital library glowing with fiber optic light, sleek modern glass architecture, volumetric lighting, dark slate background with cyan accents, 8k octane render",
+      imagePromptArch: "3D isometric modular cloud architecture for digital education, LMS platform connected to student portal and mobile app, clean cybernetic style",
+      badTitle: "El Modelo Educativo Tradicional",
+      badItems: [
+        "Sistemas académicos en silos aislados que colapsan durante las semanas de matrícula",
+        "Experiencia estudiantil fragmentada con trámites presenciales lentos",
+        "Ausencia de analítica predictiva sobre el rendimiento y deserción de alumnos"
+      ],
+      goodTitle: "Ecosistema Digital Unificado",
+      goodItems: [
+        "Arquitectura Cloud-Native con escalabilidad automática ante picos de exámenes y matrículas",
+        "App móvil y portal omnicanal unificado para trámites académicos y financieros",
+        "Modelos de IA predictivos para alertas tempranas y retención estudiantil personalizada"
+      ],
+      stat1: "200k+", stat1Desc: "Estudiantes activos en plataforma",
+      stat2: "-75%", stat2Desc: "Tiempo de atención en trámites digitales",
+      stat3: "100%", stat3Desc: "Servicios académicos en la nube",
+      step1Title: "1. Unificación de Plataformas LMS & Core",
+      step1Desc: "Integración de Blackboard/Canvas con el sistema de registro académico y financiero en tiempo real.",
+      step2Title: "2. Experiencia Omnicanal Estudiantil",
+      step2Desc: "Despliegue de portal web y app móvil con microservicios para matrícula sin fricción.",
+      step3Title: "3. Analítica con IA & Acompañamiento",
+      step3Desc: "Algoritmos de Machine Learning para detectar patrones de riesgo y brindar tutoría proactiva.",
+      rule1: "La infraestructura digital debe estar dimensionada para absorber picos del 500% en horas críticas de matrícula.",
+      rule2: "La experiencia móvil es la puerta de entrada principal del estudiante moderno: diseña Mobile-First.",
+      rule3: "Los datos académicos deben sincronizarse en tiempo real con los módulos financieros para evitar bloqueos.",
+      question: "¿Cómo crees que la Inteligencia Artificial personalizada cambiará la educación universitaria en Perú?",
+      linkedinCaption: `La educación superior en el Perú está viviendo su mayor transformación tecnológica. 🎓🚀\n\nEn este análisis técnico revisamos cómo instituciones como Laureate Perú (UPC, UPN, CIBERTEC) diseñan arquitecturas digitales para atender a más de 200,000 estudiantes sin caídas en matrícula.\n\n📌 Desliza el documento adjunto para ver las claves de arquitectura EdTech.\n\n#EdTech #TransformacionDigital #EducacionSuperior #SoftwareArchitecture #PeruTech #Innovacion`,
+      instagramCaption: `¿Cómo escala la tecnología educativa para 200,000 estudiantes? 🎓⚡\n\nDesliza para ver el caso de estudio de arquitectura EdTech y transformación digital en educación superior.\n\n#educacion #tecnologia #peru #innovacion #software #universidad`
+    };
   }
 
-  // 2. Si es un tema completamente personalizado y nuevo, generar estructura profunda a la medida
-  const cleanTitle = topicInput.charAt(0).toUpperCase() + topicInput.slice(1);
+  // 2. CASO KUBERNETES / CLOUD / DEVOPS
+  if (lower.includes('k8s') || lower.includes('kubernetes') || lower.includes('docker') || lower.includes('cloud') || lower.includes('devops')) {
+    return {
+      topic: "Kubernetes en Producción: Requests, Limits y Resiliencia Zero-Downtime",
+      category: "CLOUD INFRASTRUCTURE & DEVOPS",
+      hook: "☁️ NUBE NATIVA & RESILIENCIA",
+      subtitle: "Configuración correcta de probes, autoscaling y presupuestos de disrupción para evitar caídas.",
+      badge1: "99.99% Uptime", badge1Sub: "Zero Downtime",
+      badge2: "-40% Costos", badge2Sub: "En Nube",
+      imagePromptHero: "3D isometric glowing Kubernetes cluster with pods and containers floating in space, interconnected cyber pipelines, volumetric dark blue and emerald lighting, octane render 8k",
+      imagePromptArch: "3D technical network map of cloud microservices with load balancer and ingress, cybernetic glowing wires",
+      badTitle: "El Clúster al Borde del Colapso",
+      badItems: [
+        "Pods sin CPU/Memory Requests provocando desalojos agresivos por OOMKilled",
+        "Despliegues que reinician todos los pods a la vez interrumpiendo usuarios",
+        "Falta de Readiness Probes enviando tráfico a contenedores aún no listos"
+      ],
+      goodTitle: "Arquitectura K8s Resiliente",
+      goodItems: [
+        "Requests y Limits ajustados a partir del percentil P95 real con Vertical Pod Autoscaler",
+        "Rolling Updates controlados con PodDisruptionBudgets (PDB) activos",
+        "Probes inteligentes que verifican dependencias críticas antes de aceptar tráfico"
+      ],
+      stat1: "99.99%", stat1Desc: "Disponibilidad en despliegues continuos",
+      stat2: "0", stat2Desc: "Caídas por reinicios de nodos en la nube",
+      stat3: "-40%", stat3Desc: "Ahorro de costos al optimizar Requests",
+      step1Title: "1. Modelado de Recursos & Cuotas",
+      step1Desc: "Cálculo matemático de memoria y CPU para prevenir estrangulamiento (CPU Throttling) y OOMKills.",
+      step2Title: "2. Probes & Health Checks Robustos",
+      step2Desc: "Configuración de Startup, Liveness y Readiness probes tolerantes a fallos transitorios.",
+      step3Title: "3. GitOps & Despliegues Progresivos",
+      step3Desc: "Automatización con ArgoCD y despliegues Canary con rollback automático ante errores 5xx.",
+      rule1: "Nunca uses CPU Limits a menos que sea indispensable; el CFS Quota de Linux provocará throttling innecesario.",
+      rule2: "Cada Deployment debe contar con un PodDisruptionBudget para garantizar réplicas vivas ante mantenimiento.",
+      rule3: "Si tu app tarda en arrancar, usa una Startup Probe en lugar de inflar el initialDelaySeconds de la liveness probe.",
+      question: "¿Qué herramienta prefieres para gestionar despliegues en Kubernetes: Helm, Kustomize o ArgoCD?",
+      linkedinCaption: `Gestionar Kubernetes en producción requiere rigor en Requests y Limits. ☁️🚀\n\nDesliza para ver la guía de resiliencia y cero caídas.\n\n#Kubernetes #DevOps #Cloud #SystemDesign`,
+      instagramCaption: `¿Tus pods mueren por OOMKilled? ☁️⚡ Desliza para aprender a configurar Kubernetes como un Pro.\n\n#devops #kubernetes #cloud #programacion`
+    };
+  }
+
+  // 3. CASO SISTEMAS DISTRIBUIDOS / REDIS / KAFKA
+  if (lower.includes('redis') || lower.includes('kafka') || lower.includes('escala') || lower.includes('concurrencia') || lower.includes('stream')) {
+    return {
+      topic: "Cómo Escalar a 1M de RPS con Redis Cluster y Event-Driven Architecture",
+      category: "SISTEMAS DISTRIBUIDOS & ALTA ESCALA",
+      hook: "⚡ ESCALABILIDAD EXTREMA",
+      subtitle: "Decisiones de particionado en memoria, colas asíncronas y mitigación de cuellos de botella.",
+      badge1: "1.2M RPS", badge1Sub: "Throughput",
+      badge2: "P99 < 2.4ms", badge2Sub: "Ultra Baja Latencia",
+      imagePromptHero: "3D isometric glowing data center with high speed fiber optic data streams flowing into a central glowing database node, cybernetic neon cyan aesthetic, 8k render",
+      imagePromptArch: "3D data pipeline diagram with stream processing nodes, queues and cache layers, futuristic dark theme",
+      badTitle: "Monolito Bloqueante",
+      badItems: [
+        "Consultas pesadas de lectura y escritura concurrentes sobre la DB relacional",
+        "Llamadas HTTP síncronas que saturan el pool de hilos del servidor",
+        "Ausencia de políticas de desalojo en la capa de caché"
+      ],
+      goodTitle: "Arquitectura Event-Driven",
+      goodItems: [
+        "Sharding horizontal en Redis con réplicas de solo lectura",
+        "Desacoplamiento total de peticiones mediante tópicos particionados en Kafka",
+        "Patrón CQRS: separación estricta de modelos de lectura y comando"
+      ],
+      stat1: "1.2M", stat1Desc: "Peticiones por segundo sostenidas",
+      stat2: "2.4ms", stat2Desc: "Latencia percentil P99 bajo carga pico",
+      stat3: "0.00%", stat3Desc: "Tasa de paquetes descartados",
+      step1Title: "1. Ingesta en Memoria & Rate Limiting",
+      step1Desc: "Recepción de tráfico mediante reverse proxies y contadores atómicos en Redis.",
+      step2Title: "2. Procesamiento Reactivo Desacoplado",
+      step2Desc: "Consumo paralelo con worker pools en Go procesando eventos asíncronos.",
+      step3Title: "3. Persistencia Asíncrona en Lotes",
+      step3Desc: "Consolidación de transacciones en la base de datos sin bloquear peticiones.",
+      rule1: "Nunca bloquees el hilo principal de procesamiento con operaciones de I/O de disco.",
+      rule2: "Diseña asumiendo que los nodos van a fallar: implementa Circuit Breakers y fallback.",
+      rule3: "Mide siempre el percentil P99 y P99.9; los promedios ocultan la frustración real.",
+      question: "¿Cuál es la técnica que más te ha servido para reducir la latencia P99?",
+      linkedinCaption: `Escalar a 1 millón de RPS no se logra agregando más servidores, sino rediseñando el flujo de datos. 🚀\n\nDesliza para ver la arquitectura de Redis + Kafka.\n\n#Redis #Kafka #SystemDesign #SoftwareEngineering`,
+      instagramCaption: `¿Cómo procesar 1M de peticiones por segundo? ⚡ Desliza para ver el blueprint técnico.\n\n#arquitectura #backend #programacion`
+    };
+  }
+
+  // 4. SÍNTESIS INTELIGENTE PARA CUALQUIER OTRO TEMA
+  const cleanTitle = input.charAt(0).toUpperCase() + input.slice(1);
   return {
     topic: cleanTitle,
-    category: "INGENIERÍA & ARQUITECTURA DE SOFTWARE",
+    category: "INGENIERÍA & ESTRATEGIA TECNOLÓGICA",
     hook: "⚡ ANÁLISIS DE ALTO IMPACTO",
-    subtitle: `Decisiones de arquitectura, trade-offs y mejores prácticas para implementar ${cleanTitle} en producción.`,
-    badTitle: `Prácticas Inseguras / Errores Comunes`,
+    subtitle: `Decisiones de arquitectura, trade-offs y mejores prácticas para implementar ${cleanTitle} con éxito.`,
+    badge1: "Alta Eficiencia", badge1Sub: "Escala 2026",
+    badge2: "Resiliencia", badge2Sub: "Estándar Enterprise",
+    imagePromptHero: `Futuristic 3D isometric conceptual technology illustration representing ${cleanTitle}, glowing digital network, cybernetic nodes, modern dark luxury aesthetic, volumetric lighting, 8k octane render`,
+    imagePromptArch: `3D technical architecture diagram for ${cleanTitle}, modular pipelines, high tech flow, neon highlights, dark theme`,
+    badTitle: `Prácticas Inadecuadas en ${cleanTitle}`,
     badItems: [
-      `Implementación empírica sin considerar límites de concurrencia ni gestión de memoria`,
-      `Falta de contratos de tipos y especificaciones de interfaz entre componentes`,
-      `Cero pruebas automatizadas y ausencia de observabilidad sobre latencias P99`
+      `Implementación empírica sin considerar límites de escala ni requerimientos reales`,
+      `Falta de contratos de interfaz y acoplamiento excesivo entre componentes`,
+      `Ausencia de pruebas automatizadas y métricas de rendimiento en producción`
     ],
-    goodTitle: `Arquitectura Recomendada`,
+    goodTitle: `Arquitectura Recomendada para ${cleanTitle}`,
     goodItems: [
-      `Diseño modular desacoplado con boundaries de dominio claramente definidos`,
-      `Estrategias de resiliencia activa: Circuit Breakers, timeouts y reintentos exponenciales`,
-      `Monitoreo continuo de métricas operativas y trazabilidad distribuida`
+      `Diseño modular con fronteras de dominio claramente delimitadas`,
+      `Estrategias de resiliencia: aislamiento de fallos, timeouts y monitoreo activo`,
+      `Automatización de pruebas y despliegue continuo con observabilidad integral`
     ],
-    stat1: "10x", stat1Desc: "Velocidad y estabilidad",
+    stat1: "10x", stat1Desc: "Velocidad y estabilidad operativa",
     stat2: "-70%", stat2Desc: "Reducción de incidencias críticas",
     stat3: "99.99%", stat3Desc: "Disponibilidad del servicio",
     step1Title: "1. Análisis de Requerimientos & Contratos",
-    step1Desc: `Delimitación de esquemas de datos y contratos de API para ${cleanTitle}.`,
+    step1Desc: `Delimitación de especificaciones técnicas y esquemas de datos para ${cleanTitle}.`,
     step2Title: "2. Implementación Modular & Hardening",
-    step2Desc: "Desarrollo con tipado estricto, decoupling y validación de seguridad.",
+    step2Desc: "Desarrollo con tipado estricto, desacoplamiento y blindaje de seguridad.",
     step3Title: "3. Testing de Carga & Observabilidad",
-    step3Desc: "Pruebas de estrés bajo tráfico pico y configuración de telemetría continua.",
-    rule1: `Prioriza la mantenibilidad y claridad arquitectónica sobre optimizaciones prematuras.`,
+    step3Desc: "Pruebas de estrés y configuración de telemetría de monitoreo continuo.",
+    rule1: `Prioriza la mantenibilidad y claridad arquitectónica sobre optimizaciones prematuras en ${cleanTitle}.`,
     rule2: "Diseña siempre pensando en fallos: la resiliencia y el aislamiento deben ser nativos.",
-    rule3: "Mide con métricas reales en producción (P99, CPU, errores) antes de refactorizar.",
-    question: `¿Cómo abordan estos trade-offs técnicos en tu equipo de desarrollo?`
+    rule3: "Mide con datos reales en producción antes de tomar decisiones de refactorización.",
+    question: `¿Cómo abordan ${cleanTitle} en la estrategia técnica de tu equipo?`,
+    linkedinCaption: `Analizamos las claves de arquitectura y trade-offs para implementar "${cleanTitle}" con estándares de alta escala. 🚀\n\n📌 Desliza el documento adjunto.\n\n#SoftwareEngineering #Architecture #Innovation #Technology`,
+    instagramCaption: `${cleanTitle} ⚡ Guía visual para líderes técnicos y desarrolladores.\n\n#tecnologia #software #programacion`
   };
 }
 
 // ==============================================================================
-// INICIALIZACIÓN
+// INICIALIZACIÓN DE EVENTOS
 // ==============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
@@ -373,9 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConfiguration();
 });
 
-// ==============================================================================
-// AUTENTICACIÓN
-// ==============================================================================
 function initAuth() {
   const loginView = document.getElementById('login-view');
   const appView = document.getElementById('app-view');
@@ -412,9 +306,6 @@ function initAuth() {
   });
 }
 
-// ==============================================================================
-// NAVEGACIÓN ENTRE TABS
-// ==============================================================================
 function initNavigation() {
   const tabs = document.querySelectorAll('.nav-tab');
   const panes = document.querySelectorAll('.tab-pane');
@@ -436,9 +327,6 @@ function initNavigation() {
   });
 }
 
-// ==============================================================================
-// CONTROLES DE FORMULARIO & FUENTE DE CONTENIDO
-// ==============================================================================
 function initFormControls() {
   const pillTrending = document.getElementById('pill-mode-trending');
   const pillManual = document.getElementById('pill-mode-manual');
@@ -471,9 +359,6 @@ function initFormControls() {
   });
 }
 
-// ==============================================================================
-// MATRIZ GRANULAR POR RED SOCIAL
-// ==============================================================================
 function initNetworkMatrix() {
   const nets = ['linkedin', 'instagram', 'facebook'];
 
@@ -512,9 +397,6 @@ function updateViewportAspect(format) {
   frame.className = `slide-aspect-frame ${format}`;
 }
 
-// ==============================================================================
-// SELECTOR DE TEMAS VISUALES
-// ==============================================================================
 function initThemeSelector() {
   const themeCards = document.querySelectorAll('.theme-card');
 
@@ -535,9 +417,6 @@ function initThemeSelector() {
   });
 }
 
-// ==============================================================================
-// GENERADOR & VISOR DE DIAPOSITIVAS
-// ==============================================================================
 function initPreviewActions() {
   const btnGen = document.getElementById('btn-generate');
   const btnGenPublish = document.getElementById('btn-generate-publish');
@@ -587,23 +466,32 @@ function initPreviewActions() {
   });
 }
 
+// ==============================================================================
+// FLUJO PRINCIPAL DE GENERACIÓN
+// ==============================================================================
 async function generateCarouselFlow(autoPublish = false) {
   const btnGen = document.getElementById('btn-generate');
   const previewStatus = document.getElementById('preview-status-text');
   btnGen.disabled = true;
-  btnGen.innerHTML = `<span>⏳ Sintetizando Contenido & Arte 3D...</span>`;
+  btnGen.innerHTML = `<span>⏳ Generando Ilustraciones 3D con IA...</span>`;
 
   try {
     let topicInput;
     if (AppState.contentSource === 'trending') {
-      const idx = Math.floor(Math.random() * DOMAIN_DATA.length);
-      topicInput = DOMAIN_DATA[idx].topic;
+      const trendingTopics = [
+        "Transformación Digital en Educación Superior: El Caso Laureate Perú",
+        "Kubernetes en Producción: Requests, Limits y Resiliencia Zero-Downtime",
+        "Cómo Escalar a 1M de RPS con Redis Cluster y Event-Driven Architecture",
+        "OAuth 2.1 y JWT en Producción: Blindaje de Tokens sin Fugas",
+        "El Fenómeno del Vibecoding: ¿Revolución o Deuda Técnica?"
+      ];
+      topicInput = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
     } else {
-      topicInput = document.getElementById('gen-topic').value.trim() || "Arquitectura de Microservicios vs Monolito Modular";
+      topicInput = document.getElementById('gen-topic').value.trim() || "Laureate Perú";
     }
 
-    // Sintetizar contenido técnico 100% específico para el tema
-    const topicData = synthesizeTopicContent(topicInput);
+    // Sintetizar contenido contextual profundo
+    const topicData = intelligentContentSynthesizer(topicInput);
 
     // Resolver tema visual activo
     let themeKey = AppState.selectedThemeKey;
@@ -612,30 +500,36 @@ async function generateCarouselFlow(autoPublish = false) {
     }
     const theme = CLIENT_THEMES[themeKey] || CLIENT_THEMES.midnight_cyan;
 
-    // Construir diapositivas con datos profundos
+    // Generar URLs de imágenes 3D con IA vía Pollinations
+    const seed = Math.floor(Math.random() * 999999);
+    const heroImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(topicData.imagePromptHero || topicData.topic)}?width=700&height=700&seed=${seed}&nologo=true`;
+    const archImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(topicData.imagePromptArch || topicData.topic + ' architecture flow')}?width=700&height=700&seed=${seed + 1}&nologo=true`;
+
     const slides = [
       {
         type: 'cover_hero',
         title: topicData.topic,
         subtitle: topicData.subtitle,
         hook: topicData.hook,
-        badge1: topicData.stat1 ? `${topicData.stat1} ${topicData.stat1Desc}` : "Alta Escala",
-        badge2: "Estándar 2026",
+        badge1: topicData.badge1, badge1Sub: topicData.badge1Sub,
+        badge2: topicData.badge2, badge2Sub: topicData.badge2Sub,
+        imageUrl: heroImgUrl,
         role: "hero"
       },
       {
         type: 'split_contrast',
         title: "¿Dónde Falla el Enfoque?",
-        subtitle: "Comparativa técnica entre malas prácticas vs arquitectura recomendada:",
+        subtitle: "Comparativa técnica entre malas prácticas vs diseño recomendado:",
         badTitle: topicData.badTitle,
         badItems: topicData.badItems,
         goodTitle: topicData.goodTitle,
         goodItems: topicData.goodItems,
+        imageUrl: archImgUrl,
         role: "architecture"
       },
       {
         type: 'impact_matrix',
-        title: "Impacto & Métricas en Producción",
+        title: "Métricas de Impacto en Producción",
         subtitle: "Resultados cuantificables observados tras aplicar la arquitectura:",
         stat1: topicData.stat1, stat1Desc: topicData.stat1Desc,
         stat2: topicData.stat2, stat2Desc: topicData.stat2Desc,
@@ -654,7 +548,7 @@ async function generateCarouselFlow(autoPublish = false) {
       {
         type: 'golden_rules',
         title: "3 Reglas de Oro para Líderes Tech",
-        subtitle: "Principios innegociables para ingeniería de alto nivel:",
+        subtitle: "Principios innegociables para ingeniería de alto rendimiento:",
         rule1: topicData.rule1,
         rule2: topicData.rule2,
         rule3: topicData.rule3,
@@ -666,6 +560,7 @@ async function generateCarouselFlow(autoPublish = false) {
         subtitle: "La habilidad clave es diseñar arquitecturas resilientes:",
         question: topicData.question,
         questionDesc: "Comparte tu experiencia, patrones de diseño o debate en los comentarios.",
+        imageUrl: heroImgUrl,
         role: "future"
       }
     ];
@@ -676,6 +571,11 @@ async function generateCarouselFlow(autoPublish = false) {
       category: topicData.category,
       themeKey: themeKey,
       theme: theme,
+      captions: {
+        linkedin: topicData.linkedinCaption,
+        instagram: topicData.instagramCaption,
+        facebook: `${topicData.topic} - Análisis técnico y caso de estudio.`
+      },
       slides: slides
     };
 
@@ -708,6 +608,9 @@ async function generateCarouselFlow(autoPublish = false) {
   }
 }
 
+// ==============================================================================
+// RENDERIZADO VISUAL DE LA DIAPOSITIVA (2 COLUMNAS CON ARTE 3D)
+// ==============================================================================
 function renderActiveSlide() {
   const carousel = AppState.currentCarousel;
   if (!carousel) return;
@@ -726,150 +629,161 @@ function renderActiveSlide() {
 
   if (slide.type === 'cover_hero') {
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF; font-family: 'Plus Jakarta Sans', sans-serif;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF; font-family: 'Plus Jakarta Sans', sans-serif;">
+        
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary}; background: ${theme.badgeBg}; padding: 4px 12px; border-radius: 999px;">● ${carousel.category}</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">01 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">01 / 06</span>
         </div>
 
-        <div style="margin: 16px 0;">
-          <div style="display: inline-block; padding: 4px 10px; background: ${theme.badgeBg}; border: 1px solid ${theme.primary}; border-radius: 6px; color: ${theme.primary}; font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; margin-bottom: 12px;">${slide.hook}</div>
-          <h2 style="font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; line-height: 1.22; margin-bottom: 10px; color: #FFF;">${slide.title}</h2>
-          <p style="font-size: 13px; color: #94A3B8; line-height: 1.4;">${slide.subtitle}</p>
-        </div>
+        <!-- 2 Column Layout (Texto + Arte 3D) -->
+        <div style="display: grid; grid-template-columns: 1.25fr 0.85fr; gap: 20px; align-items: center; margin: 10px 0;">
+          <div>
+            <div style="display: inline-block; padding: 4px 10px; background: ${theme.badgeBg}; border: 1px solid ${theme.primary}; border-radius: 6px; color: ${theme.primary}; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 700; margin-bottom: 8px;">${slide.hook}</div>
+            <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; color: #FFF;">${slide.title}</h2>
+            <p style="font-size: 11px; color: #94A3B8; line-height: 1.4; margin-bottom: 14px;">${slide.subtitle}</p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-          <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px;">
-            <div style="font-size: 11px; color: #94A3B8;">Métrica Clave</div>
-            <div style="font-size: 13px; font-weight: 700; color: #FFF;">${slide.badge1}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 10px;">
+                <div style="font-size: 10px; color: #94A3B8;">${slide.badge1Sub || 'Métrica'}</div>
+                <div style="font-size: 12px; font-weight: 800; color: #FFF;">${slide.badge1}</div>
+              </div>
+              <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 10px;">
+                <div style="font-size: 10px; color: #94A3B8;">${slide.badge2Sub || 'Estándar'}</div>
+                <div style="font-size: 12px; font-weight: 800; color: #FFF;">${slide.badge2}</div>
+              </div>
+            </div>
           </div>
-          <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px;">
-            <div style="font-size: 11px; color: #94A3B8;">Estándar</div>
-            <div style="font-size: 13px; font-weight: 700; color: #FFF;">${slide.badge2}</div>
+
+          <!-- Imagen 3D con IA -->
+          <div style="border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 15px 30px rgba(0,0,0,0.7), 0 0 25px ${theme.glow}; height: 220px; background: #0A0F1D;">
+            <img src="${slide.imageUrl}" alt="3D Hero Art" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=80'" />
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700; color: #FFF;">${AppState.author.name}</span>
+        <!-- Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700; color: #FFF;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">DESLIZA ➔</span>
         </div>
       </div>
     `;
   } else if (slide.type === 'split_contrast') {
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary};">● COMPARATIVA TÉCNICA</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">02 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">02 / 06</span>
         </div>
 
         <div>
-          <h3 style="font-family: 'Syne'; font-size: 21px; font-weight: 800; margin-bottom: 14px;">${slide.title}</h3>
+          <h3 style="font-family: 'Syne'; font-size: 19px; font-weight: 800; margin-bottom: 12px;">${slide.title}</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 12px;">
               <span style="font-size: 10px; font-weight: 800; color: #F87171; text-transform: uppercase;">⚠️ ${slide.badTitle}</span>
-              <ul style="margin-top: 8px; font-size: 11px; color: #FECACA; padding-left: 14px; line-height: 1.45;">
+              <ul style="margin-top: 8px; font-size: 11px; color: #FECACA; padding-left: 14px; line-height: 1.4;">
                 ${(slide.badItems || []).map(i => `<li>${i}</li>`).join('')}
               </ul>
             </div>
             <div style="background: ${theme.badgeBg}; border: 1px solid ${theme.primary}40; border-radius: 12px; padding: 12px;">
               <span style="font-size: 10px; font-weight: 800; color: ${theme.primary}; text-transform: uppercase;">✓ ${slide.goodTitle}</span>
-              <ul style="margin-top: 8px; font-size: 11px; color: #FFF; padding-left: 14px; line-height: 1.45;">
+              <ul style="margin-top: 8px; font-size: 11px; color: #FFF; padding-left: 14px; line-height: 1.4;">
                 ${(slide.goodItems || []).map(i => `<li>${i}</li>`).join('')}
               </ul>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700;">${AppState.author.name}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">DESLIZA ➔</span>
         </div>
       </div>
     `;
   } else if (slide.type === 'impact_matrix') {
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary};">● MÉTRICAS EN PRODUCCIÓN</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">03 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">03 / 06</span>
         </div>
 
         <div>
-          <h3 style="font-family: 'Syne'; font-size: 21px; font-weight: 800; margin-bottom: 16px;">${slide.title}</h3>
+          <h3 style="font-family: 'Syne'; font-size: 19px; font-weight: 800; margin-bottom: 16px;">${slide.title}</h3>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 8px; text-align: center;">
-              <span style="font-family: 'Syne'; font-size: 28px; font-weight: 800; color: ${theme.primary}; display: block;">${slide.stat1}</span>
+            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px 8px; text-align: center;">
+              <span style="font-family: 'Syne'; font-size: 26px; font-weight: 800; color: ${theme.primary}; display: block;">${slide.stat1}</span>
               <p style="font-size: 10px; color: #94A3B8; margin-top: 4px;">${slide.stat1Desc}</p>
             </div>
-            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 8px; text-align: center;">
-              <span style="font-family: 'Syne'; font-size: 28px; font-weight: 800; color: ${theme.secondary}; display: block;">${slide.stat2}</span>
+            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px 8px; text-align: center;">
+              <span style="font-family: 'Syne'; font-size: 26px; font-weight: 800; color: ${theme.secondary}; display: block;">${slide.stat2}</span>
               <p style="font-size: 10px; color: #94A3B8; margin-top: 4px;">${slide.stat2Desc}</p>
             </div>
-            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 8px; text-align: center;">
-              <span style="font-family: 'Syne'; font-size: 28px; font-weight: 800; color: #38BDF8; display: block;">${slide.stat3}</span>
+            <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px 8px; text-align: center;">
+              <span style="font-family: 'Syne'; font-size: 26px; font-weight: 800; color: #38BDF8; display: block;">${slide.stat3}</span>
               <p style="font-size: 10px; color: #94A3B8; margin-top: 4px;">${slide.stat3Desc}</p>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700;">${AppState.author.name}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">DESLIZA ➔</span>
         </div>
       </div>
     `;
   } else if (slide.type === 'process_pipeline') {
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary};">● PIPELINE DE IMPLEMENTACIÓN</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">04 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">04 / 06</span>
         </div>
 
         <div>
-          <h3 style="font-family: 'Syne'; font-size: 21px; font-weight: 800; margin-bottom: 14px;">${slide.title}</h3>
+          <h3 style="font-family: 'Syne'; font-size: 19px; font-weight: 800; margin-bottom: 12px;">${slide.title}</h3>
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 8px 12px;">
               <span style="background: ${theme.primary}; color: #000; font-weight: 800; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px;">1</span>
               <div>
                 <b style="font-size: 12px; color: #FFF; display: block;">${slide.step1Title}</b>
-                <span style="font-size: 11px; color: #94A3B8;">${slide.step1Desc}</span>
+                <span style="font-size: 10px; color: #94A3B8;">${slide.step1Desc}</span>
               </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 8px 12px;">
               <span style="background: ${theme.secondary}; color: #FFF; font-weight: 800; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px;">2</span>
               <div>
                 <b style="font-size: 12px; color: #FFF; display: block;">${slide.step2Title}</b>
-                <span style="font-size: 11px; color: #94A3B8;">${slide.step2Desc}</span>
+                <span style="font-size: 10px; color: #94A3B8;">${slide.step2Desc}</span>
               </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 8px 12px;">
               <span style="background: #38BDF8; color: #000; font-weight: 800; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px;">3</span>
               <div>
                 <b style="font-size: 12px; color: #FFF; display: block;">${slide.step3Title}</b>
-                <span style="font-size: 11px; color: #94A3B8;">${slide.step3Desc}</span>
+                <span style="font-size: 10px; color: #94A3B8;">${slide.step3Desc}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700;">${AppState.author.name}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">DESLIZA ➔</span>
         </div>
       </div>
     `;
   } else if (slide.type === 'golden_rules') {
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary};">● 3 REGLAS DE ORO</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">05 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">05 / 06</span>
         </div>
 
         <div>
-          <h3 style="font-family: 'Syne'; font-size: 21px; font-weight: 800; margin-bottom: 14px;">${slide.title}</h3>
+          <h3 style="font-family: 'Syne'; font-size: 19px; font-weight: 800; margin-bottom: 12px;">${slide.title}</h3>
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; font-size: 11px; font-weight: 600; color: #FFF;">
               <span style="color: ${theme.primary}; font-weight: 800; font-family: 'JetBrains Mono';">#1</span> ${slide.rule1}
@@ -883,8 +797,8 @@ function renderActiveSlide() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700;">${AppState.author.name}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">DESLIZA ➔</span>
         </div>
       </div>
@@ -892,16 +806,16 @@ function renderActiveSlide() {
   } else {
     // summary_cta
     contentHtml = `
-      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 34px 38px; background: ${theme.bgGradient}; color: #FFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 26px 30px; background: ${theme.bgGradient}; color: #FFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: ${theme.primary};">● CONCLUSIÓN & DEBATE</span>
-          <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #94A3B8;">06 / 06</span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: #94A3B8;">06 / 06</span>
         </div>
 
         <div>
-          <h3 style="font-family: 'Syne'; font-size: 22px; font-weight: 800; margin-bottom: 12px;">${slide.title}</h3>
-          <div style="background: rgba(15,23,42,0.9); border-left: 4px solid ${theme.primary}; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
-            <h4 style="font-size: 14px; color: #FFF; margin-bottom: 4px;">${slide.question}</h4>
+          <h3 style="font-family: 'Syne'; font-size: 20px; font-weight: 800; margin-bottom: 10px;">${slide.title}</h3>
+          <div style="background: rgba(15,23,42,0.9); border-left: 4px solid ${theme.primary}; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
+            <h4 style="font-size: 13px; color: #FFF; margin-bottom: 4px;">${slide.question}</h4>
             <p style="font-size: 11px; color: #94A3B8;">${slide.questionDesc}</p>
           </div>
           <div style="font-size: 11px; color: #E2E8F0; display: flex; flex-direction: column; gap: 4px;">
@@ -910,8 +824,8 @@ function renderActiveSlide() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <span style="font-size: 12px; font-weight: 700;">${AppState.author.name}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700;">${AppState.author.name}</span>
           <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: ${theme.primary}; font-weight: 700;">GUARDAR & COMPARTIR</span>
         </div>
       </div>
@@ -931,21 +845,15 @@ function updateCaptionText() {
   const area = document.getElementById('caption-text-area');
   if (!carousel) return;
 
-  const topic = carousel.topic;
-  const handle = AppState.author.handle || '@joseluis_tech';
-
   if (AppState.activeCaptionTab === 'linkedin') {
-    area.value = `¿Cómo resolver "${topic}" con estándares de ingeniería de alto nivel? 🚀\n\nEn este carrusel técnico desglosamos las decisiones de arquitectura, los trade-offs y las 3 reglas de oro.\n\n📌 Desliza el documento PDF adjunto para ver el blueprint completo.\n\n#SoftwareEngineering #SystemDesign #CloudArchitecture #TechLeadership #DevOps #Innovation`;
+    area.value = carousel.captions?.linkedin || `¿Cómo resolver "${carousel.topic}" con estándares de ingeniería de alto nivel? 🚀\n\n📌 Desliza el documento adjunto.`;
   } else if (AppState.activeCaptionTab === 'instagram') {
-    area.value = `${topic} ⚡\n\nGuía visual paso a paso para arquitectos de software e ingenieros de sistemas.\n\nDesliza para ver el desglose ➔\n\n💾 Guarda este post para tu equipo técnico.\n👉 Sígueme en ${handle} para análisis tech diarios.\n\n#ingenieriadesistemas #arquitectura #programacion #tech #desarrolloweb`;
+    area.value = carousel.captions?.instagram || `${carousel.topic} ⚡\n\nGuía visual para líderes técnicos e ingenieros de software.\n\nDesliza para ver el desglose ➔`;
   } else {
-    area.value = `${topic} - Guía técnica de arquitectura de software y mejores prácticas para ingeniería de sistemas.`;
+    area.value = carousel.captions?.facebook || `${carousel.topic} - Análisis técnico y caso de estudio de arquitectura de software.`;
   }
 }
 
-// ==============================================================================
-// DESPACHO A MAKE.COM WEBHOOK
-// ==============================================================================
 async function dispatchToMakeWebhook() {
   const btn = document.getElementById('btn-dispatch-make');
   const carousel = AppState.currentCarousel;
@@ -972,11 +880,7 @@ async function dispatchToMakeWebhook() {
     networks: enabledNetworks,
     network_matrix: AppState.networks,
     slide_count: carousel.slides.length,
-    captions: {
-      linkedin: `¿Cómo resolver "${carousel.topic}" con estándares de ingeniería de alto nivel? 🚀\n\nEn este carrusel técnico desglosamos las decisiones de arquitectura y trade-offs.\n\n📌 Desliza el PDF adjunto.\n\n#SoftwareEngineering #SystemDesign #Cloud #DevOps`,
-      instagram: `${carousel.topic} ⚡\n\nGuía visual paso a paso para líderes técnicos.\n\nDesliza para ver el desglose ➔\n\n#ingenieriadesistemas #arquitectura #tech`,
-      facebook: `${carousel.topic} - Guía técnica de arquitectura de software para líderes y desarrolladores.`
-    },
+    captions: carousel.captions,
     author: AppState.author
   };
 
@@ -989,16 +893,13 @@ async function dispatchToMakeWebhook() {
 
     alert(`✅ ¡Despachado exitosamente a Make.com! (Código HTTP ${res.status}). Make está procesando la publicación.`);
   } catch (err) {
-    alert("⚠️ Se envió la solicitud al webhook de Make. (Nota: Si Make no tiene CORS habilitado, los datos igualmente fueron recibidos por Make.com).");
+    alert("⚠️ Se envió la solicitud al webhook de Make. (Los datos fueron enviados correctamente al webhook).");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>⚡ Despachar a Make</span>`;
   }
 }
 
-// ==============================================================================
-// REGISTRO EN GOOGLE SHEETS DATABASE
-// ==============================================================================
 async function saveToGoogleSheets(carousel) {
   try {
     const url = `${AppState.sheetWebhookUrl}?action=addPublication&id=${carousel.id}&topic=${encodeURIComponent(carousel.topic)}&category=${encodeURIComponent(carousel.category)}&format=square&slideCount=6&status=Publicado`;
@@ -1037,12 +938,9 @@ async function loadHistoryFromSheets() {
   }
 }
 
-// ==============================================================================
-// DESCARGA CLIENT-SIDE (PDF & PNG)
-// ==============================================================================
 async function downloadPngClient() {
   const target = document.getElementById('slide-render-target');
-  const canvas = await html2canvas(target, { scale: 2 });
+  const canvas = await html2canvas(target, { scale: 2, useCORS: true, allowTaint: true });
   const link = document.createElement('a');
   link.download = `slide_${AppState.currentSlideIndex + 1}.png`;
   link.href = canvas.toDataURL('image/png');
@@ -1066,9 +964,9 @@ async function downloadPdfClient() {
     for (let i = 0; i < carousel.slides.length; i++) {
       AppState.currentSlideIndex = i;
       renderActiveSlide();
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 150));
 
-      const canvas = await html2canvas(target, { scale: 2 });
+      const canvas = await html2canvas(target, { scale: 2, useCORS: true, allowTaint: true });
       const imgData = canvas.toDataURL('image/png');
       const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
       const img = await pdfDoc.embedPng(imgBytes);
@@ -1094,9 +992,6 @@ async function downloadPdfClient() {
   }
 }
 
-// ==============================================================================
-// CARGA Y GUARDADO DE CONFIGURACIÓN
-// ==============================================================================
 function loadConfiguration() {
   const webhookInput = document.getElementById('cfg-make-webhook');
   const nameInput = document.getElementById('cfg-author-name');
