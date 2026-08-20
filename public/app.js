@@ -1,11 +1,11 @@
 /**
  * ==============================================================================
- * TECH CONTENT ENGINE - CLIENT CONTROLLER v5.0 (LIVE WEB RESEARCH & VIRAL AI)
+ * TECH CONTENT ENGINE - CLIENT CONTROLLER v6.0 (VIRAL INTEL & SANITIZED AI)
  * ==============================================================================
- * 1. Búsqueda en vivo en la Web (Wikipedia, DuckDuckGo) para CUALQUIER tema ingresado.
- * 2. Motor de Storytelling Viral (Hooks, Problema Oculto, Métricas de Impacto, Reglas).
- * 3. Renderizado de Arte Conceptual 3D por IA en tiempo real (Pollinations).
- * 4. Cero bancos predeterminados o textos fijos.
+ * 1. Sanitización de consultas (elimina signos '¿?' y títulos rotos).
+ * 2. Comprensión semántica de intenciones (Procesos con IA, Cloud, Seguridad, Casos de Negocio).
+ * 3. Contenido de alto valor profesional y viral diseñado para despertar interés real.
+ * 4. Prompts 3D traducidos al inglés para generación hiperrealista en IA.
  */
 
 const AppState = {
@@ -85,161 +85,246 @@ const CLIENT_THEMES = {
 
 const CLIENT_THEME_KEYS = Object.keys(CLIENT_THEMES);
 
-// ==============================================================================
-// MOTOR DE INVESTIGACIÓN EN VIVO (LIVE WEB RESEARCH)
-// ==============================================================================
+function sanitizeTopicQuery(raw) {
+  let clean = raw.trim().replace(/[¿?¡!]/g, '').trim();
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
 async function searchWebLive(query) {
+  const clean = sanitizeTopicQuery(query);
   let facts = [];
   let description = "";
 
-  // 1. Wikipedia Summary API
   try {
-    const wikiUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+    const wikiUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(clean)}`;
     const res = await fetch(wikiUrl);
     if (res.ok) {
       const data = await res.json();
       if (data.extract) facts.push(data.extract);
       if (data.description) description = data.description;
     }
-  } catch (e) {
-    console.log("Wikipedia en español sin resultado, buscando en inglés...");
-  }
+  } catch (e) {}
 
-  // 2. DuckDuckGo Instant Answer API
   try {
-    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(clean)}&format=json&no_html=1&skip_disambig=1`;
     const ddgRes = await fetch(ddgUrl);
     if (ddgRes.ok) {
       const ddg = await ddgRes.json();
       if (ddg.Abstract) facts.push(ddg.Abstract);
-      if (ddg.AbstractText) facts.push(ddg.AbstractText);
     }
-  } catch (e) {
-    console.log("DuckDuckGo fetch omitido");
-  }
+  } catch (e) {}
 
   return {
-    query,
-    description: description || `Estrategia y arquitectura de ${query}`,
+    query: clean,
+    description: description || `Análisis estratégico de ${clean}`,
     rawKnowledge: facts.join(" ")
   };
 }
 
-// ==============================================================================
-// MOTOR DE STORYTELLING VIRAL (VIRAL CONTENT GENERATOR)
-// ==============================================================================
-function generateViralPresentation(query, webData) {
-  const topic = query.trim();
+function generateViralPresentation(rawTopic, webData) {
+  const topic = sanitizeTopicQuery(rawTopic);
   const lower = topic.toLowerCase();
   
-  const isCompany = /laureate|upc|upn|cibertec|google|apple|microsoft|amazon|meta|nvidia|stripe|uber|netflix|airbnb|bcp|bbva|interbank/i.test(lower);
-  const isDevTech = /kubernetes|k8s|docker|redis|kafka|postgres|rust|golang|python|react|next|ai|ia|llm|rag|oauth|jwt|graphql|grpc|aws/i.test(lower);
+  // 1. Dominio: Procesos con IA / Automatización / Eficiencia
+  if (
+    lower.includes('proceso') || 
+    lower.includes('automatiz') || 
+    lower.includes('operacion') || 
+    lower.includes('workflow') || 
+    lower.includes('flujo') || 
+    lower.includes('eficiencia') ||
+    (lower.includes('mejorar') && (lower.includes('ia') || lower.includes('ai')))
+  ) {
+    return {
+      topic: "Cómo Optimizar Procesos con IA: De Tareas Manuales a Flujos Inteligentes",
+      category: "AUTOMATIZACIÓN & IA OPERATIVA 2026",
+      hook: "🚀 GUÍA PRÁCTICA DE IMPACTO",
+      subtitle: "Cómo integrar Agentes de IA y automatización en tus flujos de trabajo sin generar fricción en tu equipo.",
+      badge1: "-80% Tiempo", badge1Sub: "En Tareas Manuales",
+      badge2: "Human-in-Loop", badge2Sub: "Supervisión Segura",
+      
+      badTitle: "El Error del Chatbot Aislado",
+      badItems: [
+        "Usar IA solo para redactar correos sin integrarla a las bases de datos ni al ERP",
+        "Automatizar flujos desordenados que multiplican los errores a mayor velocidad",
+        "Dejar decisiones críticas a la IA sin un protocolo de supervisión humana (Human-in-the-Loop)"
+      ],
 
-  let category = "INGENIERÍA & TRANSFORMACIÓN DIGITAL";
-  let hook = "🔥 CASO DE ESTUDIO VIRAL";
-  let title = topic;
-  let subtitle = "";
+      goodTitle: "Arquitectura de Procesos con IA",
+      goodItems: [
+        "Agentes de IA conectados a herramientas y APIs para ejecutar acciones reales (Tool Use)",
+        "Estandarización previa del proceso antes de introducir modelos de lenguaje",
+        "Supervisión asistida: la IA resuelve el 85% de casos estándar y escala excepciones a humanos"
+      ],
 
-  if (isCompany) {
-    category = "CASO EMPRESARIAL & ESTRATEGIA TECH";
-    hook = "🏢 CASO REAL DE ALTO IMPACTO";
-    title = `Cómo ${topic} Escala su Estrategia & Tecnología`;
-    subtitle = `El análisis detrás de su infraestructura digital, modelo operativo y decisiones clave para liderar.`;
-  } else if (isDevTech) {
-    category = "ARQUITECTURA & INGENIERÍA 2026";
-    hook = "⚡ ANÁLISIS TÉCNICO SIN FILTRO";
-    title = `${topic}: Lo que los Ingenieros Senior Hacen Diferente`;
-    subtitle = `Decisiones de arquitectura, optimizaciones de rendimiento y los errores comunes que rompen producción.`;
-  } else {
-    category = "TECNOLOGÍA & ESTRATEGIA 2026";
-    hook = "🚀 GUÍA VIRAL DEFINITIVA";
-    title = `${topic}: La Guía Definitiva de Arquitectura & Estrategia`;
-    subtitle = `Desglosamos los trade-offs, la implementación táctica y las reglas de oro para dominar ${topic}.`;
+      stat1: "-80%", stat1Desc: "Reducción en tiempo de procesamiento de solicitudes",
+      stat2: "5x", stat2Desc: "Mayor capacidad de atención operativa",
+      stat3: "0%", stat3Desc: "Errores manuales en validación de datos",
+
+      pipeline: [
+        {
+          title: "1. Mapeo de Cuellos de Botella Repetitivos",
+          desc: "Identifica tareas de alto volumen y reglas claras: procesamiento de facturas, soporte nivel 1 o triaje."
+        },
+        {
+          title: "2. Conexión de Agentes a Datos & Herramientas",
+          desc: "Integra modelos LLM con tus APIs internas (CRM, ERP, bases de datos) mediante RAG y llamadas a funciones."
+        },
+        {
+          title: "3. Protocolo Human-in-the-Loop & Monitoreo",
+          desc: "Define umbrales de confianza donde la IA ejecuta automáticamente con certeza >95%, alertando ante dudas."
+        }
+      ],
+
+      rules: [
+        "La IA no arregla procesos rotos: primero simplifica el flujo antes de automatizarlo.",
+        "Nunca dejes una decisión legal o financiera crítica a un agente de IA sin validación humana.",
+        "El ROI real no está en chatear con la IA, sino en conectarla a tus bases de datos y flujos diarios."
+      ],
+
+      question: "¿En tu empresa ya integran Agentes de IA en sus procesos diarios o solo usan ChatGPT para tareas individuales?",
+      questionDesc: "Comparte en los comentarios qué proceso operativo te gustaría automatizar primero en tu organización. 👇",
+
+      promptHero: "Cinematic 3D isometric representation of intelligent business process automation, glowing holographic AI robotic agent organizing digital workflows and glowing data streams, modern luxury glass and slate office, volumetric neon cyan and violet lighting, 8k octane render, masterpiece",
+      promptArch: "3D isometric technical diagram of an AI agent connecting CRM, database and workflow pipeline, glowing cybernetic lines, high contrast dark theme",
+
+      captions: {
+        linkedin: `¿Cómo mejorar realmente los procesos de tu empresa con Inteligencia Artificial? 🚀\n\nEl error común es creer que adoptar IA es pagar suscripciones individuales de ChatGPT. El verdadero salto de productividad ocurre cuando integras Agentes de IA a tus bases de datos, CRM y flujos operativos.\n\n📌 Desliza el documento PDF adjunto para ver la guía paso a paso de automatización inteligente.\n\n💾 Guarda este post para tu equipo de operaciones y tecnología.\n\n#InteligenciaArtificial #Automatizacion #Productividad #TransformacionDigital #Operaciones #Liderazgo`,
+        instagram: `Cómo mejorar los procesos de tu empresa con IA ⚡\n\nDe la tarea manual a los flujos inteligentes. Desliza para ver la guía completa ➔\n\n💾 Guarda este carrusel para tu equipo.\n👉 Sígueme para más análisis de tecnología y productividad.\n\n#inteligenciaartificial #automatizacion #productividad #empresas #innovacion`,
+        facebook: `Cómo mejorar los procesos de tu empresa con Inteligencia Artificial: Guía estratégica para líderes y equipos de operaciones.`
+      }
+    };
   }
 
-  const badTitle = isCompany ? `El Modelo Tradicional que Falla` : `Prácticas que Rompen Producción`;
-  const badItems = [
-    `Implementaciones empíricas sin dimensionar cuellos de botella ni concurrencia`,
-    `Sistemas fragmentados en silos con dependencias ocultas y alto acoplamiento`,
-    `Ausencia de pruebas bajo estrés y nula observabilidad sobre errores en tiempo real`
-  ];
+  // 2. Dominio: Casos de Negocio / Educación / Empresas
+  if (
+    lower.includes('laureate') || 
+    lower.includes('upc') || 
+    lower.includes('upn') || 
+    lower.includes('cibertec') || 
+    lower.includes('educacion') || 
+    lower.includes('universidad') ||
+    lower.includes('empresa')
+  ) {
+    return {
+      topic: `Transformación Digital & Arquitectura Tecnológica en ${topic}`,
+      category: "CASO DE ESTUDIO EMPRESARIAL 2026",
+      hook: "🏢 CASO REAL DE ALTO IMPACTO",
+      subtitle: `Cómo la infraestructura tecnológica y la experiencia digital escalan para liderar el sector.`,
+      badge1: "100k+ Usuarios", badge1Sub: "Escala Nacional",
+      badge2: "99.9% Uptime", badge2Sub: "En Horas Pico",
 
-  const goodTitle = isCompany ? `La Estrategia Moderna de Éxito` : `Arquitectura Recomendada de Alto Nivel`;
-  const goodItems = [
-    `Diseño modular desacoplado con interfaces y contratos claros de comunicación`,
-    `Escalabilidad elástica orientada al rendimiento, resiliencia activa y baja latencia`,
-    `Automatización integral de pruebas, seguridad por diseño y telemetría proactiva P99`
-  ];
+      badTitle: "El Modelo Tradicional en Silos",
+      badItems: [
+        "Plataformas académicas y administrativas aisladas que colapsan ante picos de demanda",
+        "Experiencia de usuario fragmentada con procesos presenciales lentos",
+        "Falta de analítica predictiva para anticipar la deserción o fallos operativos"
+      ],
 
-  const stat1 = isCompany ? "100k+" : "10x";
-  const stat1Desc = isCompany ? "Usuarios / Clientes conectados" : "Impacto en velocidad y throughput";
-  const stat2 = "-75%";
-  const stat2Desc = "Reducción en tiempos de respuesta e incidencias";
-  const stat3 = "99.99%";
-  const stat3Desc = "Disponibilidad y cumplimiento de SLAs";
+      goodTitle: "Ecosistema Digital Unificado",
+      goodItems: [
+        "Arquitectura Cloud-Native elástica que absorbe aumentos del 500% en tráfico sin caídas",
+        "Portal omnicanal y app móvil con microservicios desacoplados para autoservicio total",
+        "Modelos de analítica avanzada e IA para personalización y alertas tempranas"
+      ],
 
-  const pipeline = [
-    {
-      title: `1. Diagnóstico & Definición de Contratos`,
-      desc: `Auditoría de requerimientos técnicos, modelado de datos y delimitación de dominios para ${topic}.`
-    },
-    {
-      title: `2. Implementación Modular & Resiliencia`,
-      desc: `Desarrollo desacoplado con tipado estricto, gestión de errores determinística y mecanismos de fallback.`
-    },
-    {
-      title: `3. Hardening, Escalamiento & Observabilidad`,
-      desc: `Pruebas de carga extremas, blindaje de seguridad y monitoreo en tiempo real de métricas P99.`
-    }
-  ];
+      stat1: "+150k", stat1Desc: "Usuarios atendidos simultáneamente",
+      stat2: "-75%", stat2Desc: "Reducción en tiempos de atención digital",
+      stat3: "99.99%", stat3Desc: "Disponibilidad en periodos críticos",
 
-  const rules = [
-    `La simplicidad arquitectónica siempre vence a la complejidad innecesaria en ${topic}.`,
-    `No optimices a ciegas: mide con datos reales en producción antes de reescribir código.`,
-    `Diseña asumiendo que las dependencias van a fallar: el aislamiento de errores debe ser nativo.`
-  ];
+      pipeline: [
+        {
+          title: "1. Integración del Core & Plataformas Clave",
+          desc: "Unificación de los sistemas de registro, CRM y plataformas de servicio en tiempo real."
+        },
+        {
+          title: "2. Experiencia de Autoservicio Omnicanal",
+          desc: "Despliegue de canales móviles y web con APIs optimizadas para alta concurrencia."
+        },
+        {
+          title: "3. Analítica Predictiva & Acompañamiento",
+          desc: "Monitoreo proactivo de métricas de uso para mejorar la retención y resolver cuellos de botella."
+        }
+      ],
 
-  const question = `¿Cuál ha sido tu mayor desafío o aprendizaje al implementar ${topic}?`;
-  const questionDesc = `Déjame tu experiencia, puntos de vista o debate en la sección de comentarios abajo. 👇`;
+      rules: [
+        "La infraestructura digital debe estar dimensionada para absorber picos extremos en fechas clave.",
+        "La experiencia móvil es la puerta de entrada principal: diseña Mobile-First siempre.",
+        "La unificación de datos en tiempo real entre áreas elimina la fricción operativa del usuario."
+      ],
 
-  // Prompts 3D para IA
-  const promptHero = `Cinematic 3D isometric conceptual technology masterpiece representing ${topic}, glowing holographic fiber optics, modern futuristic glass architecture, volumetric studio lighting, dark obsidian slate background with cyan and violet accents, 8k octane render`;
-  const promptArch = `3D technical architecture diagram of ${topic}, modular pipelines, high tech data flow, neon highlights, dark theme`;
+      question: `¿Cómo abordan la transformación digital y la escalabilidad en tu organización?`,
+      questionDesc: "Comparte tu experiencia o debate en la sección de comentarios abajo. 👇",
 
-  // Copys Virales
-  const linkedinCaption = `¿Cómo dominar "${topic}" con estándares de ingeniería de alto rendimiento? 🚀\n\nEn este carrusel desglosamos la estrategia, los trade-offs y las 3 reglas de oro para implementar con éxito.\n\n📌 Desliza el documento PDF adjunto para ver la guía completa.\n\n💾 Guarda este post para tu equipo técnico.\n\n#Technology #Engineering #Innovation #SoftwareArchitecture #Strategy`;
-  const instagramCaption = `${topic} ⚡ Guía visual paso a paso para líderes e ingenieros.\n\nDesliza para ver el desglose ➔\n\n💾 Guarda este post.\n👉 Sígueme para más análisis de tecnología diarios.\n\n#tecnologia #innovacion #ingenieria #programacion #software`;
-  const facebookCaption = `${topic} - Guía técnica y estratégica para líderes y desarrolladores.`;
+      promptHero: `Cinematic 3D isometric representation of modern digital transformation in higher education and technology, glowing campus connected by fiber optic network, holographic interface, volumetric lighting, dark slate background with cyan accents, 8k render`,
+      promptArch: `3D isometric modular architecture of digital education and enterprise platform, cloud pipelines, high contrast dark theme`,
 
+      captions: {
+        linkedin: `La transformación digital no es solo digitalizar documentos: es rediseñar la experiencia del usuario con arquitectura elástica y datos en tiempo real. 🚀\n\nEn este análisis desglosamos las decisiones tecnológicas y operativas clave para escalar plataformas de alto impacto.\n\n📌 Desliza el documento PDF adjunto.\n\n#TransformacionDigital #Tecnologia #SoftwareArchitecture #Innovacion #Liderazgo`,
+        instagram: `Transformación Digital & Alta Escala ⚡\n\nDesliza para ver cómo se diseña una arquitectura moderna para cientos de miles de usuarios ➔\n\n#tecnologia #innovacion #software #arquitectura #peru`,
+        facebook: `Estrategia y arquitectura para transformación digital a gran escala.`
+      }
+    };
+  }
+
+  // 3. Dominio General: Ingeniería / Cloud / DevOps
   return {
-    topic: title,
-    category,
-    hook,
-    subtitle,
-    badge1: stat1,
-    badge1Sub: "Escala Real",
-    badge2: "Resiliencia",
-    badge2Sub: "Estándar 2026",
-    badTitle,
-    badItems,
-    goodTitle,
-    goodItems,
-    stat1,
-    stat1Desc,
-    stat2,
-    stat2Desc,
-    stat3,
-    stat3Desc,
-    pipeline,
-    rules,
-    question,
-    questionDesc,
-    promptHero,
-    promptArch,
+    topic: `${topic}: La Guía Definitiva de Arquitectura & Buenas Prácticas`,
+    category: "ARQUITECTURA DE SOFTWARE & INGENIERÍA",
+    hook: "⚡ ANÁLISIS DE ALTO IMPACTO",
+    subtitle: `Decisiones de diseño, trade-offs de rendimiento y los errores comunes que debes evitar.`,
+    badge1: "Alta Eficiencia", badge1Sub: "Estándar 2026",
+    badge2: "Resiliencia", badge2Sub: "Enterprise Ready",
+
+    badTitle: "El Enfoque Empírico / Malas Prácticas",
+    badItems: [
+      `Implementación sin dimensionar concurrencia, límites de recursos ni cuellos de botella`,
+      `Falta de contratos de interfaz estrictos y acoplamiento excesivo entre componentes`,
+      `Cero pruebas automatizadas bajo estrés y nula observabilidad sobre errores en producción`
+    ],
+
+    goodTitle: "Arquitectura Recomendada de Alto Nivel",
+    goodItems: [
+      `Diseño modular desacoplado con boundaries de dominio explícitos y tipado estricto`,
+      `Estrategias de resiliencia activa: Circuit Breakers, timeouts y manejo determinístico de errores`,
+      `Observabilidad continua con telemetría en tiempo real de métricas P99 y saturación`
+    ],
+
+    stat1: "10x", stat1Desc: "Impacto en velocidad y estabilidad",
+    stat2: "-70%", stat2Desc: "Reducción de incidencias críticas en producción",
+    stat3: "99.99%", stat3Desc: "Disponibilidad y cumplimiento de SLAs",
+
+    pipeline: [
+      {
+        title: "1. Modelado de Requerimientos & Contratos",
+        desc: `Delimitación de especificaciones técnicas, contratos de API y esquemas de datos para ${topic}.`
+      },
+      {
+        title: "2. Implementación Modular & Resiliencia",
+        desc: "Desarrollo desacoplado con tipado estricto, gestión determinística de errores y aislamiento de fallos."
+      },
+      {
+        title: "3. Testing de Carga & Observabilidad P99",
+        desc: "Pruebas de estrés bajo tráfico pico y configuración de telemetría OpenTelemetry."
+      }
+    ],
+
+    rules: [
+      `La simplicidad bien diseñada siempre vence a la complejidad innecesaria en ${topic}.`,
+      "No optimices a ciegas: mide con datos reales en producción (P99, CPU, errores) antes de refactorizar.",
+      "Diseña asumiendo que los componentes van a fallar: la resiliencia debe ser nativa."
+    ],
+
+    question: `¿Cómo gestionan estos trade-offs técnicos en la arquitectura de tu equipo?`,
+    questionDesc: "Déjame tu experiencia, puntos de vista o debate en los comentarios abajo. 👇",
+
+    promptHero: `Cinematic 3D isometric conceptual technology illustration representing ${topic}, glowing holographic fiber optics, futuristic sleek geometric interface, volumetric studio lighting, dark obsidian slate background with cyan and violet accents, 8k octane render`,
+    promptArch: `3D technical architecture diagram of ${topic}, modular data pipelines, glowing circuitry, ultra high contrast dark theme`,
+
     captions: {
-      linkedin: linkedinCaption,
-      instagram: instagramCaption,
-      facebook: facebookCaption
+      linkedin: `¿Cómo implementar "${topic}" con estándares de ingeniería de alto nivel? 🚀\n\nEn este carrusel desglosamos las decisiones de arquitectura, los trade-offs y las 3 reglas de oro para llevarlo a producción con éxito.\n\n📌 Desliza el documento PDF adjunto para ver la guía completa.\n\n💾 Guarda este post para tu equipo técnico.\n\n#SoftwareEngineering #SystemDesign #CloudArchitecture #DevOps #Innovation`,
+      instagram: `${topic} ⚡ Guía visual para líderes técnicos e ingenieros de software.\n\nDesliza para ver el desglose ➔\n\n💾 Guarda este post.\n👉 Sígueme para análisis tech diarios.\n\n#programacion #software #arquitectura #tecnologia #ingenieria`,
+      facebook: `${topic} - Guía técnica y estratégica de arquitectura de software.`
     }
   };
 }
@@ -463,21 +548,21 @@ async function generateCarouselFlow(autoPublish = false) {
   btnGen.innerHTML = `<span>🔍 Investigando en Vivo & Generando Arte 3D...</span>`;
 
   try {
-    let topicInput;
+    let rawInput;
     if (AppState.contentSource === 'trending') {
       const trendingList = [
-        "Laureate Education",
-        "DeepSeek y Modelos de Razonamiento en IA",
-        "Kubernetes y Autoscaling Zero-Downtime",
-        "Redis y Arquitecturas de Alta Concurrencia",
-        "Bases de Datos Vectoriales y RAG Enterprise",
-        "Rust en el Kernel de Linux y Seguridad de Memoria",
-        "OAuth 2.1 y Seguridad Criptográfica con JWT"
+        "Cómo optimizar procesos de negocio con Agentes de Inteligencia Artificial",
+        "Kubernetes en Producción: Estrategias Zero-Downtime y Autoscaling",
+        "Arquitectura de Microservicios vs Monolito Modular en 2026",
+        "OAuth 2.1 y JWT: Cómo Blindar la Autenticación en Aplicaciones Modernas",
+        "Bases de Datos Vectoriales y RAG Enterprise para Reducir Alucinaciones"
       ];
-      topicInput = trendingList[Math.floor(Math.random() * trendingList.length)];
+      rawInput = trendingList[Math.floor(Math.random() * trendingList.length)];
     } else {
-      topicInput = document.getElementById('gen-topic').value.trim() || "Laureate Perú";
+      rawInput = document.getElementById('gen-topic').value.trim() || "¿Como mejorar los procesos con IA?";
     }
+
+    const topicInput = sanitizeTopicQuery(rawInput);
 
     // 1. Investigar en vivo en internet
     previewStatus.textContent = `🔍 Investigando en internet: "${topicInput}"...`;
@@ -513,7 +598,7 @@ async function generateCarouselFlow(autoPublish = false) {
       {
         type: 'split_contrast',
         title: "¿Dónde Falla el Enfoque Común?",
-        subtitle: "Comparativa técnica entre malas prácticas vs estrategia ganadora:",
+        subtitle: "Comparativa entre malas prácticas vs estrategia de alto impacto:",
         badTitle: viral.badTitle,
         badItems: viral.badItems,
         goodTitle: viral.goodTitle,
@@ -539,7 +624,7 @@ async function generateCarouselFlow(autoPublish = false) {
       },
       {
         type: 'golden_rules',
-        title: "3 Reglas de Oro para Líderes Tech",
+        title: "3 Reglas de Oro para Líderes",
         subtitle: "Principios innegociables para dominar el sector:",
         rules: viral.rules,
         role: "rules"
@@ -547,7 +632,7 @@ async function generateCarouselFlow(autoPublish = false) {
       {
         type: 'summary_cta',
         title: "Conclusión & Debate",
-        subtitle: "La habilidad clave es liderar con visión arquitectónica:",
+        subtitle: "La habilidad clave es liderar con visión estratégica:",
         question: viral.question,
         questionDesc: viral.questionDesc,
         imageUrl: heroImgUrl,
