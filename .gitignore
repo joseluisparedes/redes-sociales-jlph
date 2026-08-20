@@ -5,3 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+output/
+assets/generated_cache/
+scratch/
+temp_skills/
